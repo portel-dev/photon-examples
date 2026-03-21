@@ -1,6 +1,3 @@
-import * as fs from 'fs';
-import * as path from 'path';
-
 /**
  * Photon Walkthrough
  *
@@ -16,12 +13,7 @@ export default class Walkthrough {
    * Learn to build photons — from zero to production
    * @format slides
    */
-  start() {
-    const slidesPath = path.join(
-      path.dirname(import.meta.url.replace('file://', '')),
-      'walkthrough',
-      'slides.md'
-    );
-    return fs.readFileSync(slidesPath, 'utf-8');
+  main() {
+    return this.assets('slides.md', true);
   }
 }
