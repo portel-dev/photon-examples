@@ -2,7 +2,7 @@
 
 WebGlow — Automated Website Redesign Pipeline Finds local businesses with ugly websites, redesigns them into polished demos, deploys them for free, and queues outreach. Schedule it daily to generate a steady stream of leads. Pipeline: scan → qualify → redesign → deploy → outreach Each instance (`_use`) targets a niche + city: `_use('nail-salons-sydney')` `_use('wedding-venues-london')` `_use('restaurants-austin')`
 
-> **18 tools** · Workflow Photon · v1.0.0 · MIT
+> **21 tools** · Workflow Photon · v1.0.0 · MIT
 
 **Platform Features:** `generator` `elicitation` `streaming` `stateful`
 
@@ -24,7 +24,10 @@ No configuration required.
 | `queue` | Get leads ready for redesign (qualified but not yet redesigned). |
 | `deploy` | Record a deployed site with its live URL. |
 | `draft` | Generate an outreach email draft for a deployed site. |
+| `send` | Send the outreach email via Google Workspace CLI. |
 | `contacted` | Mark a business as contacted |
+| `followup` | Schedule a follow-up via Google Calendar. |
+| `ready` | Batch outreach — send emails and schedule follow-ups for all ready leads. |
 | `discover` | Find email addresses for businesses that don't have one. |
 | `nomail` | List businesses that still need email discovery |
 | `config` | Configure your brand name, services, and payment link |
@@ -161,6 +164,24 @@ Generate an outreach email draft for a deployed site. Returns the business detai
 ---
 
 
+### `send`
+
+Send the outreach email via Google Workspace CLI. Uses `gws gmail +send` to send the email directly from your Gmail. Requires `gws auth login` to be done once beforehand.
+
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `website` | any | Yes | Original website URL |
+| `subject` | string | Yes | Email subject line |
+| `body` | string | Yes | Email body (plain text or HTML) |
+
+
+
+
+
+---
+
+
 ### `contacted`
 
 Mark a business as contacted
@@ -169,6 +190,35 @@ Mark a business as contacted
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `website` | any | Yes | Original website URL |
+
+
+
+
+
+---
+
+
+### `followup`
+
+Schedule a follow-up via Google Calendar. Creates a calendar event to follow up with a lead after sending the initial outreach. Uses `gws calendar +insert`.
+
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `website` | any | Yes | Original website URL |
+| `daysFromNow` | number | No | Days until follow-up (e.g. `3`) |
+| `notes` | string | No | Notes for the follow-up event |
+
+
+
+
+
+---
+
+
+### `ready`
+
+Batch outreach — send emails and schedule follow-ups for all ready leads. Returns the gws commands for each lead. The calling LLM should first generate the email with `draft`, then execute `send`, then `followup`.
 
 
 

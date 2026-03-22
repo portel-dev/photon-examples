@@ -20,10 +20,13 @@
  * | Qualify | `agent-browser screenshot` | Free |
  * | Redesign | LLM + Unsplash photos | LLM tokens only |
  * | Deploy | Vercel / Netlify / GitHub Pages | Free tier |
+ * | Send | `gws gmail +send` (Google Workspace CLI) | Free |
+ * | Follow-up | `gws calendar +insert` | Free |
  * | Outreach | LLM drafts email | LLM tokens only |
  *
- * No paid APIs required. Uses `agent-browser` CLI for all browser
- * automation (scraping Google Maps, taking screenshots, reading pages).
+ * No paid APIs required. Uses `agent-browser` CLI for browser automation
+ * and `gws` (Google Workspace CLI) for sending email and calendar events.
+ * Setup: `npm install -g @googleworkspace/cli && gws auth login`
  *
  * agent-browser commands:
  *   `agent-browser open <url>` — navigate to page
@@ -424,6 +427,46 @@ Write a short, personalized cold email following these guidelines.`;
   }
 
   /**
+   * Send the outreach email via Google Workspace CLI
+   *
+   * Uses `gws gmail +send` to send the email directly from your Gmail.
+   * Requires `gws auth login` to be done once beforehand.
+   *
+   * @param website Original website URL
+   * @param subject Email subject line
+   * @param body Email body (plain text or HTML)
+   */
+  async send({ website, subject, body }: {
+    website: string;
+    subject: string;
+    body: string;
+  }) {
+    const deployed = this.state.deployed.find(
+      d => d.business.website === website
+    );
+    if (!deployed) throw new Error(`No deployed site for ${website}`);
+    if (!deployed.business.email) throw new Error(`No email for ${deployed.business.name}. Run \`discover\` first.`);
+
+    const email = deployed.business.email;
+
+    // Build gws command
+    const cmd = [
+      'gws', 'gmail', '+send',
+      '--to', email,
+      '--subject', subject,
+      '--body', body,
+    ];
+
+    return {
+      command: cmd.join(' '),
+      to: email,
+      subject,
+      business: deployed.business.name,
+      hint: `Run this command to send:\n\n\`${cmd.map(c => c.includes(' ') ? `"${c}"` : c).join(' ')}\`\n\nOr use the pipeline's auto-send by confirming.`,
+    };
+  }
+
+  /**
    * Mark a business as contacted
    *
    * @param website Original website URL
@@ -433,6 +476,79 @@ Write a short, personalized cold email following these guidelines.`;
       this.state.contacted.push(website);
     }
     return { marked: website, totalContacted: this.state.contacted.length };
+  }
+
+  /**
+   * Schedule a follow-up via Google Calendar
+   *
+   * Creates a calendar event to follow up with a lead after sending
+   * the initial outreach. Uses `gws calendar +insert`.
+   *
+   * @param website Original website URL
+   * @param daysFromNow Days until follow-up {@example 3}
+   * @param notes Notes for the follow-up event
+   */
+  followup({ website, daysFromNow, notes }: {
+    website: string;
+    daysFromNow?: number;
+    notes?: string;
+  }) {
+    const deployed = this.state.deployed.find(
+      d => d.business.website === website
+    );
+    if (!deployed) throw new Error(`No deployed site for ${website}`);
+
+    const days = daysFromNow || 3;
+    const followDate = new Date();
+    followDate.setDate(followDate.getDate() + days);
+    const dateStr = followDate.toISOString().split('T')[0];
+
+    const biz = deployed.business;
+    const summary = `Follow up: ${biz.name} — website redesign`;
+    const description = [
+      `Business: ${biz.name}`,
+      `Email: ${biz.email || 'unknown'}`,
+      `Original site: ${biz.website}`,
+      `Demo: ${deployed.liveUrl}`,
+      deployed.showcaseUrl ? `Showcase: ${deployed.showcaseUrl}` : '',
+      notes ? `\nNotes: ${notes}` : '',
+    ].filter(Boolean).join('\n');
+
+    const cmd = [
+      'gws', 'calendar', '+insert',
+      '--summary', `"${summary}"`,
+      '--date', dateStr,
+      '--description', `"${description}"`,
+    ];
+
+    return {
+      command: cmd.join(' '),
+      date: dateStr,
+      summary,
+      business: biz.name,
+      hint: `Run this command to create the calendar event:\n\n\`${cmd.join(' ')}\``,
+    };
+  }
+
+  /**
+   * Batch outreach — send emails and schedule follow-ups for all ready leads
+   *
+   * Returns the gws commands for each lead. The calling LLM should
+   * first generate the email with `draft`, then execute `send`, then `followup`.
+   *
+   * @format table
+   * @readOnly
+   */
+  ready() {
+    return this.state.deployed
+      .filter(d => d.business.email && !this.state.contacted.includes(d.business.website))
+      .map(d => ({
+        name: d.business.name,
+        email: d.business.email,
+        demo: d.liveUrl,
+        showcase: d.showcaseUrl || '—',
+        status: 'ready to send',
+      }));
   }
 
   // ── Email Discovery ───────────────────────────────────────
