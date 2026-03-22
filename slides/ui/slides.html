@@ -152,8 +152,9 @@
     }
 
     .thumb-inner {
-      width: 100%;
-      height: 100%;
+      width: 960px;
+      height: 540px;
+      transform: scale(var(--thumb-scale, 0.16));
       transform-origin: top left;
       pointer-events: none;
       overflow: hidden;
@@ -164,6 +165,92 @@
       width: 960px !important;
       height: 540px !important;
     }
+
+    /* ── Deck Picker Overlay ── */
+
+    .deck-picker {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .deck-picker.hidden { display: none; }
+
+    .deck-picker h2 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .deck-picker .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: -12px;
+    }
+
+    .deck-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      max-width: 700px;
+      width: 100%;
+      padding: 0 24px;
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+
+    .deck-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 20px;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+
+    .deck-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .deck-card .deck-title {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .deck-card .deck-date {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .deck-create {
+      display: flex;
+      gap: 8px;
+      max-width: 400px;
+      width: 100%;
+      padding: 0 24px;
+    }
+
+    .deck-create input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .deck-create input:focus { border-color: var(--accent); }
+    .deck-create input::placeholder { color: var(--muted); }
 
     /* ── Main Area ── */
 
@@ -343,11 +430,24 @@
 </head>
 <body>
 
+  <!-- ══ Deck Picker ══ -->
+  <div class="deck-picker" id="deck-picker">
+    <h2>Slides</h2>
+    <p class="subtitle">Choose a deck or create a new one</p>
+    <div class="deck-grid" id="deck-grid"></div>
+    <div class="deck-create">
+      <input type="text" id="new-deck-name" placeholder="New deck name..." />
+      <button class="tb-btn primary" id="create-deck-btn">Create</button>
+    </div>
+  </div>
+
   <!-- ══ Toolbar ══ -->
   <div class="toolbar">
     <div class="ai-dot"></div>
     <span class="deck-name" id="deck-name">Slides</span>
 
+    <button class="tb-btn" id="decks-btn" title="Switch deck">📂 Decks</button>
+    <div class="tb-sep"></div>
     <button class="tb-btn" id="add-btn" title="Add slide">+ Add</button>
     <button class="tb-btn" id="dup-btn" title="Duplicate slide">Duplicate</button>
     <button class="tb-btn" id="del-btn" title="Delete slide">Delete</button>
@@ -457,6 +557,8 @@
     function renderFilmstrip() {
       const strip = document.getElementById("filmstrip");
       strip.innerHTML = "";
+      const thumbW = 180 - 20; // padding
+      const scale = thumbW / 960;
 
       slides.forEach((slide, i) => {
         const thumb = document.createElement("div");
@@ -465,10 +567,13 @@
 
         const inner = document.createElement("div");
         inner.className = "thumb-inner";
+        inner.style.setProperty("--thumb-scale", scale);
         inner.innerHTML = slide.html;
-        // Scale to fit thumbnail
-        const scale = (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--filmstrip-w')) || 180 - 20) / 960;
-        inner.style.transform = `scale(${(180 - 20) / 960})`;
+
+        // Apply marp CSS to thumbnails
+        const style = document.createElement("style");
+        style.textContent = marpCSS;
+        inner.prepend(style);
 
         const num = document.createElement("div");
         num.className = "thumb-num";
@@ -576,6 +681,10 @@
         if (r && r.html) loadDeck(r);
         selectSlide(Math.min(currentIdx, slides.length - 1));
       }
+    });
+
+    document.getElementById("decks-btn").addEventListener("click", () => {
+      showDeckPicker();
     });
 
     document.getElementById("transition-select").addEventListener("change", (e) => {
@@ -702,6 +811,69 @@
       }
     });
 
+    // ── Deck Picker ──
+
+    let deckLoaded = false;
+
+    function showDeckPicker() {
+      document.getElementById("deck-picker").classList.remove("hidden");
+      if (slidesApp) {
+        slidesApp.list().then(r => {
+          const data = parseMCP(r);
+          const grid = document.getElementById("deck-grid");
+          const decks = data?.decks || [];
+
+          if (decks.length === 0) {
+            grid.innerHTML = '<p style="color:var(--muted);text-align:center;grid-column:1/-1;">No decks yet. Create one below.</p>';
+          } else {
+            grid.innerHTML = decks.map(d => `
+              <div class="deck-card" data-file="${d.file}">
+                <div class="deck-title">${d.title || d.file}</div>
+                <div class="deck-date">${d.updatedAt ? new Date(d.updatedAt).toLocaleDateString() : ''}</div>
+              </div>
+            `).join('');
+
+            grid.querySelectorAll(".deck-card").forEach(card => {
+              card.addEventListener("click", () => {
+                const file = card.dataset.file;
+                const instance = file.replace(/\.md$/i, '');
+                openDeck(instance);
+              });
+            });
+          }
+        });
+      }
+    }
+
+    function hideDeckPicker() {
+      document.getElementById("deck-picker").classList.add("hidden");
+    }
+
+    async function openDeck(instance) {
+      if (!slidesApp) return;
+      // Use _use to switch instance, then load
+      try {
+        await slidesApp._use?.({ name: instance });
+      } catch { /* _use may not exist as callable */ }
+      const r = parseMCP(await slidesApp.main());
+      handleData(r);
+      deckLoaded = true;
+      hideDeckPicker();
+      document.getElementById("deck-name").textContent = instance;
+    }
+
+    document.getElementById("create-deck-btn").addEventListener("click", () => {
+      const input = document.getElementById("new-deck-name");
+      const name = input.value.trim();
+      if (!name) return;
+      openDeck(name);
+      input.value = '';
+    });
+
+    document.getElementById("new-deck-name").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("create-deck-btn").click();
+    });
+
     // ── Bridge ──
 
     if (slidesApp) {
@@ -716,7 +888,21 @@
         }
       });
 
-      slidesApp.main().then(r => handleData(parseMCP(r)));
+      // Check if there's a loaded deck already (instance was set)
+      slidesApp.main().then(r => {
+        const data = parseMCP(r);
+        if (data && data.html && data.html.trim()) {
+          // Deck already loaded (instance was picked)
+          handleData(data);
+          deckLoaded = true;
+          hideDeckPicker();
+        } else {
+          // No content — show deck picker
+          showDeckPicker();
+        }
+      }).catch(() => {
+        showDeckPicker();
+      });
     }
   </script>
 </body>
