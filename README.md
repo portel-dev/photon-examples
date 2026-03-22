@@ -123,6 +123,7 @@ Built on the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/intr
 | Photon | Focus | Tools | Features |
 |--------|-------|-------|----------|
 | [**Ag Ui Showcase**](ag-ui-showcase.md) | AG-UI Event Showcase Demonstrates how photon yields map to AG-UI protocol events. String yields become TEXT_MESSAGE events, progress yields become STEP events, and return values become STATE_SNAPSHOT events. | 3 | ⚡ |
+| [**Autoloop**](autoloop.md) | AutoLoop — Self-Improving Optimization Loop Applies Karpathy's auto-research pattern to anything with a measurable output. Give it a file to optimize, binary eval criteria, and a way to measure results. It pulls real data, scores outputs, finds what works, rewrites the file, and logs every change. Each instance (`_use`) is a separate optimization target: `_use('video-hooks')` — optimize video script hooks `_use('email-subject')` — optimize email subject lines `_use('landing-cta')` — optimize landing page CTAs | 13 | - |
 | [**Background Job**](background-job.md) | Background Job Processor Demonstrates MCP Tasks for fire-and-forget async operations. Designed for tasks/create — the client gets a task ID immediately and polls tasks/get for progress and results. | 2 | ⚡ |
 | [**Context Aware**](context-aware.md) | Context-Aware Photon Demonstrates bidirectional state exposure where frontend widget state flows into photon methods via this._clientState. | 2 | - |
 | [**Deploy Pipeline**](deploy-pipeline.md) | Deploy Pipeline Demonstrates persistent approvals for destructive operations. Approval confirmations survive page navigation and server restarts. | 2 | ⚡ |
@@ -138,7 +139,7 @@ Built on the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/intr
 | [**Walkthrough**](walkthrough.md) | Photon Walkthrough An interactive step-by-step guide to building photons. Every demo is a real method on this photon — zero external dependencies. The slides show code for named classes, but the live UI calls these methods. | 8 | ⚡⚡ |
 
 
-**Total:** 14 photons ready to use
+**Total:** 15 photons ready to use
 
 ---
 
@@ -182,7 +183,7 @@ Output (paste directly into your MCP client config):
 
 Add the output to your MCP client's configuration. **Consult your client's documentation** for setup instructions.
 
-**That's it!** Your AI assistant now has 14 focused tools at its fingertips.
+**That's it!** Your AI assistant now has 15 focused tools at its fingertips.
 
 ---
 
@@ -248,7 +249,7 @@ Each photon delivers **singular focus** to a **precise target**.
 
 **Key Features:**
 - 🎯 Each photon does one thing perfectly
-- 📦 14 production-ready photons available
+- 📦 15 production-ready photons available
 - ⚡ Auto-installs dependencies
 - 🔧 Works out of the box
 - 📄 Single-file design (easy to fork and customize)

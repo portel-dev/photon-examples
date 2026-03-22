@@ -24,6 +24,37 @@
       ]
     },
     {
+      "name": "autoloop",
+      "version": "1.0.0",
+      "description": "AutoLoop — Self-Improving Optimization Loop Applies Karpathy's auto-research pattern to anything with a measurable output. Give it a file to optimize, binary eval criteria, and a way to measure results. It pulls real data, scores outputs, finds what works, rewrites the file, and logs every change. Each instance (`_use`) is a separate optimization target: `_use('video-hooks')` — optimize video script hooks `_use('email-subject')` — optimize email subject lines `_use('landing-cta')` — optimize landing page CTAs",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "🔄",
+      "source": "../autoloop.photon.ts",
+      "hash": "sha256:910a7a90652ff885a243f59267919c0e26d1e6aa14b071cebacf3aaf86baec25",
+      "contentHash": "sha256:910a7a90652ff885a243f59267919c0e26d1e6aa14b071cebacf3aaf86baec25",
+      "tools": [
+        "init",
+        "criteria",
+        "feed",
+        "score",
+        "batch",
+        "analyze",
+        "improve",
+        "apply",
+        "reject",
+        "log",
+        "entry",
+        "export",
+        "status"
+      ],
+      "assets": [],
+      "photonType": "api",
+      "features": [
+        "stateful"
+      ]
+    },
+    {
       "name": "background-job",
       "version": "1.0.0",
       "description": "Background Job Processor Demonstrates MCP Tasks for fire-and-forget async operations. Designed for tasks/create — the client gets a task ID immediately and polls tasks/get for progress and results.",
