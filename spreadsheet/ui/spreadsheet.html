@@ -511,6 +511,124 @@
             margin: 4px 0;
         }
 
+        /* ── File Picker Overlay ── */
+
+        .picker-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+        }
+
+        .picker-overlay.visible { display: flex; }
+
+        .picker {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 480px;
+            max-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: picker-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes picker-in {
+            from { opacity: 0; transform: scale(0.96) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .picker-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .picker-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .picker-search {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .picker-search:focus { border-color: var(--accent); }
+        .picker-search::placeholder { color: var(--text-muted); }
+
+        .picker-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .picker-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.12s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        .picker-item:hover { background: var(--selection-bg); }
+
+        .picker-item .icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(88,166,255,0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .picker-item .info { flex: 1; min-width: 0; }
+        .picker-item .info .name { font-weight: 500; }
+        .picker-item .info .meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+        .picker-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+        }
+
+        .picker-footer input {
+            flex: 1;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .picker-footer input::placeholder { color: var(--text-muted); }
+
         /* Sidebar toggle */
         .sidebar-toggle {
             position: absolute;
@@ -530,9 +648,25 @@
     </style>
 </head>
 <body>
+    <!-- File Picker Overlay -->
+    <div class="picker-overlay" id="pickerOverlay">
+        <div class="picker">
+            <div class="picker-header">
+                <h2>Open Spreadsheet</h2>
+                <input class="picker-search" id="pickerSearch" placeholder="Search spreadsheets..." autocomplete="off">
+            </div>
+            <div class="picker-list" id="pickerList"></div>
+            <div class="picker-footer">
+                <input id="newFileName" placeholder="New spreadsheet name...">
+                <button class="btn btn-primary" onclick="createFromPicker()">Create</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toolbar -->
     <div class="toolbar">
         <div class="toolbar-section">
+            <button class="btn" onclick="showFilePicker()" title="Browse spreadsheets">Files</button>
             <button class="btn btn-primary" onclick="spreadsheet.newFile()">
                 <span>+</span> New
             </button>
@@ -767,10 +901,115 @@
         }
 
         const spreadsheet = new SpreadsheetEngine();
-        
+        let allTables = [];
+
+        // ── File Picker ──
+
+        function showFilePicker() {
+            document.getElementById('pickerOverlay').classList.add('visible');
+            document.getElementById('pickerSearch').value = '';
+            document.getElementById('pickerSearch').focus();
+            loadTableList();
+        }
+
+        function hideFilePicker() {
+            document.getElementById('pickerOverlay').classList.remove('visible');
+        }
+
+        function renderPickerList(query) {
+            const list = document.getElementById('pickerList');
+            const q = (query || '').toLowerCase();
+            const filtered = allTables.filter(t =>
+                !q || t.name.toLowerCase().includes(q) || t.file.toLowerCase().includes(q)
+            );
+
+            if (!filtered.length) {
+                list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);">No spreadsheets found</div>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(t => {
+                const sizeStr = t.size < 1024 ? t.size + ' B' :
+                    t.size < 1048576 ? (t.size / 1024).toFixed(1) + ' KB' :
+                    (t.size / 1048576).toFixed(1) + ' MB';
+                const active = t.name === spreadsheet.currentTable;
+                return `<button class="picker-item" data-name="${t.name}">
+                    <div class="icon">${active ? '📝' : '📊'}</div>
+                    <div class="info">
+                        <div class="name">${t.name}</div>
+                        <div class="meta">${sizeStr} · ${timeAgo(t.modified)}</div>
+                    </div>
+                </button>`;
+            }).join('');
+
+            list.querySelectorAll('.picker-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    spreadsheet.switchSheet(el.dataset.name);
+                    hideFilePicker();
+                });
+            });
+        }
+
+        function timeAgo(iso) {
+            if (!iso) return '';
+            const diff = Date.now() - new Date(iso).getTime();
+            const mins = Math.floor(diff / 60000);
+            if (mins < 1) return 'just now';
+            if (mins < 60) return mins + 'm ago';
+            const hrs = Math.floor(mins / 60);
+            if (hrs < 24) return hrs + 'h ago';
+            return Math.floor(hrs / 24) + 'd ago';
+        }
+
+        async function loadTableList() {
+            const app = window["spreadsheet"];
+            if (!app) return;
+            try {
+                let result = await app.list_tables();
+                if (result && result.content) {
+                    const item = result.content.find(c => c.type === "text");
+                    if (item) result = JSON.parse(item.text);
+                }
+                if (result && result.tables) {
+                    allTables = result.tables;
+                    renderPickerList('');
+                    spreadsheet.renderSheetList(result.tables);
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        function createFromPicker() {
+            const input = document.getElementById('newFileName');
+            const name = input.value.trim().replace(/\.csv$/i, '');
+            if (!name) return;
+            spreadsheet.switchSheet(name);
+            hideFilePicker();
+            input.value = '';
+        }
+
+        // Picker events
+        document.getElementById('pickerSearch').addEventListener('input', (e) => {
+            renderPickerList(e.target.value);
+        });
+        document.getElementById('pickerOverlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) hideFilePicker();
+        });
+        document.getElementById('newFileName').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') createFromPicker();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('pickerOverlay').classList.contains('visible')) {
+                hideFilePicker();
+            }
+        });
+
+        // ── Photon Bridge ──
+
         function setupPhotonBridge() {
             if (!window.photon) { setTimeout(setupPhotonBridge, 100); return; }
             if (window.initMCPBridge) window.initMCPBridge(spreadsheet);
+            // Load table list on init
+            loadTableList();
         }
         document.addEventListener('DOMContentLoaded', setupPhotonBridge);
     </script>
