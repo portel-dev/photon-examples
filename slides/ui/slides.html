@@ -278,16 +278,26 @@
       border-radius: 8px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.4);
       overflow: hidden;
-      max-width: 100%;
-      max-height: 100%;
+      width: 100%;
+      height: 100%;
+      max-width: calc((100vh - var(--toolbar-h) - 200px - 40px) * 16 / 9);
       aspect-ratio: 16/9;
       position: relative;
     }
 
-    .preview-frame section,
-    .preview-frame svg {
-      width: 100% !important;
-      height: 100% !important;
+    .preview-inner {
+      width: 960px;
+      height: 540px;
+      transform-origin: top left;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .preview-inner section,
+    .preview-inner svg {
+      width: 960px !important;
+      height: 540px !important;
     }
 
     /* ── Editor Panel ── */
@@ -472,7 +482,9 @@
     <div class="filmstrip" id="filmstrip"></div>
     <div class="main-area">
       <div class="preview-container">
-        <div class="preview-frame" id="preview-frame"></div>
+        <div class="preview-frame" id="preview-frame">
+          <div class="preview-inner" id="preview-inner"></div>
+        </div>
       </div>
       <div class="resize-handle" id="resize-handle"></div>
       <div class="editor-panel" id="editor-panel">
@@ -604,10 +616,11 @@
       const selected = document.querySelector(".thumb.selected");
       if (selected) selected.scrollIntoView({ block: "nearest" });
 
-      // Update preview
-      const preview = document.getElementById("preview-frame");
+      // Update preview — render at 960x540 and scale to fit frame
+      const inner = document.getElementById("preview-inner");
       if (slides[currentIdx]) {
-        preview.innerHTML = slides[currentIdx].html;
+        inner.innerHTML = slides[currentIdx].html;
+        scalePreview();
       }
 
       // Update editor
@@ -619,6 +632,21 @@
       // Update transition dropdown
       document.getElementById("transition-select").value = slides[currentIdx]?.transition || "fade";
     }
+
+    // ── Preview Scaling ──
+
+    function scalePreview() {
+      const frame = document.getElementById("preview-frame");
+      const inner = document.getElementById("preview-inner");
+      if (!frame || !inner) return;
+      const fw = frame.clientWidth;
+      const fh = frame.clientHeight;
+      if (fw === 0 || fh === 0) return;
+      const scale = Math.min(fw / 960, fh / 540);
+      inner.style.transform = `scale(${scale})`;
+    }
+
+    new ResizeObserver(scalePreview).observe(document.getElementById("preview-frame"));
 
     // ── Editor ──
 
@@ -642,7 +670,8 @@
             const sections = tmp.querySelectorAll(":scope > section, :scope > svg");
             if (sections[currentIdx]) {
               slides[currentIdx].html = sections[currentIdx].outerHTML;
-              document.getElementById("preview-frame").innerHTML = slides[currentIdx].html;
+              document.getElementById("preview-inner").innerHTML = slides[currentIdx].html;
+              scalePreview();
               renderFilmstrip();
             }
           }
