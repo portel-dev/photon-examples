@@ -24,64 +24,6 @@
       ]
     },
     {
-      "name": "autoloop",
-      "version": "1.0.0",
-      "description": "AutoLoop — Self-Improving Optimization Loop Applies Karpathy's auto-research pattern to anything with a measurable output. Give it a file to optimize, binary eval criteria, and a way to measure results. It pulls real data, scores outputs, finds what works, rewrites the file, and logs every change. Each instance (`_use`) is a separate optimization target: `_use('video-hooks')` — optimize video script hooks `_use('email-subject')` — optimize email subject lines `_use('landing-cta')` — optimize landing page CTAs",
-      "author": "Unknown",
-      "license": "MIT",
-      "icon": "🔄",
-      "source": "../autoloop.photon.ts",
-      "hash": "sha256:910a7a90652ff885a243f59267919c0e26d1e6aa14b071cebacf3aaf86baec25",
-      "contentHash": "sha256:910a7a90652ff885a243f59267919c0e26d1e6aa14b071cebacf3aaf86baec25",
-      "tools": [
-        "init",
-        "criteria",
-        "feed",
-        "score",
-        "batch",
-        "analyze",
-        "improve",
-        "apply",
-        "reject",
-        "log",
-        "entry",
-        "export",
-        "status"
-      ],
-      "assets": [],
-      "photonType": "api",
-      "features": [
-        "stateful"
-      ]
-    },
-    {
-      "name": "autorun",
-      "version": "1.0.0",
-      "description": "AutoRun — Orchestrates self-improvement loops for any photon A meta-photon that automates the Karpathy auto-research pattern. Point it at any photon that follows the AutoResearch interface, and it runs the full loop: pull → eval → analyze → improve → log. Target photons must implement these methods: `prompt()`              → returns current prompt/template content `update({ content })`   → writes the improved version `pull()`                → returns performance data points `criteria()`            → returns binary eval criteria The calling LLM acts as the eval engine — the `run` generator yields each output for scoring, then asks the LLM to analyze and improve. Usage: `_use('my-content')` — one instance per optimization target `autorun start --target content --interval daily`",
-      "author": "Unknown",
-      "license": "MIT",
-      "icon": "⚡",
-      "source": "../autorun.photon.ts",
-      "hash": "sha256:620148614d0868aeef496be544442ce8c455e101602ba99f1d9cd6e868585533",
-      "contentHash": "sha256:620148614d0868aeef496be544442ce8c455e101602ba99f1d9cd6e868585533",
-      "tools": [
-        "run",
-        "start",
-        "stop",
-        "log",
-        "handoff",
-        "status"
-      ],
-      "assets": [],
-      "photonType": "workflow",
-      "features": [
-        "generator",
-        "elicitation",
-        "streaming",
-        "stateful"
-      ]
-    },
-    {
       "name": "background-job",
       "version": "1.0.0",
       "description": "Background Job Processor Demonstrates MCP Tasks for fire-and-forget async operations. Designed for tasks/create — the client gets a task ID immediately and polls tasks/get for progress and results.",
@@ -194,68 +136,6 @@
       ]
     },
     {
-      "name": "email-subject",
-      "version": "1.0.0",
-      "description": "Email Subject — AutoResearch target for email subject lines Implements the AutoResearch interface so autorun can optimize your email subject lines based on real open rates. Stores the template and pulls metrics from a CSV log.",
-      "author": "Unknown",
-      "license": "MIT",
-      "icon": "📧",
-      "source": "../email-subject.photon.ts",
-      "hash": "sha256:9fdb8ffd957aff5eb780b0ac5d2c66639c0fd55ce928f99ac05588d4ebaa6ecc",
-      "contentHash": "sha256:9fdb8ffd957aff5eb780b0ac5d2c66639c0fd55ce928f99ac05588d4ebaa6ecc",
-      "tools": [
-        "prompt",
-        "criteria",
-        "pull",
-        "update",
-        "add",
-        "campaigns",
-        "generate"
-      ],
-      "assets": [],
-      "photonType": "api",
-      "features": [
-        "stateful"
-      ]
-    },
-    {
-      "name": "gbp-manager",
-      "version": "1.0.0",
-      "description": "GBP Manager — Google Business Profile Optimization for Local Services Automated Google Business Profile management that finds local service businesses with weak profiles, audits them, responds to reviews, generates posts, and delivers monthly performance reports. Each instance (`_use`) is one client business: `_use('ace-plumbing')` `_use('cool-air-hvac')` `_use('summit-roofing')`",
-      "author": "Unknown",
-      "license": "MIT",
-      "icon": "📍",
-      "source": "../gbp-manager.photon.ts",
-      "hash": "sha256:10b3678050d1fb035a6669bcb164a8df34eccd6ce0053024bce435374a8df484",
-      "contentHash": "sha256:10b3678050d1fb035a6669bcb164a8df34eccd6ce0053024bce435374a8df484",
-      "tools": [
-        "prospect",
-        "pitch",
-        "onboard",
-        "tier",
-        "audit",
-        "audits",
-        "reviews",
-        "unanswered",
-        "respond",
-        "replied",
-        "draft",
-        "post",
-        "published",
-        "history",
-        "competitors",
-        "report",
-        "responses",
-        "posts",
-        "status"
-      ],
-      "assets": [],
-      "photonType": "api",
-      "features": [
-        "stateful"
-      ]
-    },
-    {
       "name": "input-showcase",
       "version": "1.0.0",
       "description": "Input Showcase Demonstrates all input format types in the Photon auto-UI. Each method showcases a different input widget.",
@@ -292,31 +172,6 @@
       "assets": [],
       "photonType": "api",
       "features": []
-    },
-    {
-      "name": "landing-copy",
-      "version": "1.0.0",
-      "description": "Landing Copy — AutoResearch target for landing page copy Implements the AutoResearch interface so autorun can optimize your landing page hero copy based on conversion rates. Stores variants and tracks which ones convert.",
-      "author": "Unknown",
-      "license": "MIT",
-      "icon": "🎯",
-      "source": "../landing-copy.photon.ts",
-      "hash": "sha256:c1d460795ab157322d64bf5036ab7f17f65e5eaa28490bd3c6a0d3d0ed631fc3",
-      "contentHash": "sha256:c1d460795ab157322d64bf5036ab7f17f65e5eaa28490bd3c6a0d3d0ed631fc3",
-      "tools": [
-        "prompt",
-        "criteria",
-        "pull",
-        "update",
-        "add",
-        "variants",
-        "generate"
-      ],
-      "assets": [],
-      "photonType": "api",
-      "features": [
-        "stateful"
-      ]
     },
     {
       "name": "observable",
@@ -455,31 +310,6 @@
       ]
     },
     {
-      "name": "social-hooks",
-      "version": "1.0.0",
-      "description": "Social Hooks — AutoResearch target for video/social media hooks Implements the AutoResearch interface so autorun can optimize your video hooks based on real view counts. Stores the prompt template as a markdown file and pulls metrics from a CSV log. Feed your view counts into the CSV and let the loop optimize which hook patterns get the most views.",
-      "author": "Unknown",
-      "license": "MIT",
-      "icon": "🎬",
-      "source": "../social-hooks.photon.ts",
-      "hash": "sha256:6a46a9870333983e0289e54817b21d03941f141122135b644e057bd0662346b0",
-      "contentHash": "sha256:6a46a9870333983e0289e54817b21d03941f141122135b644e057bd0662346b0",
-      "tools": [
-        "prompt",
-        "criteria",
-        "pull",
-        "update",
-        "add",
-        "videos",
-        "generate"
-      ],
-      "assets": [],
-      "photonType": "api",
-      "features": [
-        "stateful"
-      ]
-    },
-    {
       "name": "spreadsheet",
       "version": "1.1.0",
       "description": "Spreadsheet — CSV-backed spreadsheet with formulas A spreadsheet engine that works on plain CSV files. Formulas (=SUM, =AVG, etc.) are stored directly in CSV cells and evaluated at runtime. Named instances map to CSV files: `_use('budget')` → `budget.csv` in your spreadsheets folder. Pass a full path to open any CSV: `_use('/path/to/data.csv')`.",
@@ -569,48 +399,6 @@
       "features": [
         "generator",
         "streaming"
-      ]
-    },
-    {
-      "name": "web-glow",
-      "version": "1.0.0",
-      "description": "WebGlow — Automated Website Redesign Pipeline Finds local businesses with ugly websites, redesigns them into polished demos, deploys them for free, and queues outreach. Schedule it daily to generate a steady stream of leads. Pipeline: scan → qualify → redesign → deploy → outreach Each instance (`_use`) targets a niche + city: `_use('nail-salons-sydney')` `_use('wedding-venues-london')` `_use('restaurants-austin')`",
-      "author": "Unknown",
-      "license": "MIT",
-      "icon": "✨",
-      "source": "../web-glow.photon.ts",
-      "hash": "sha256:22aa225bb94ddd63ea9f8eaa58ffc700022229fd17b39e1c9f52557bfb1e1d7f",
-      "contentHash": "sha256:22aa225bb94ddd63ea9f8eaa58ffc700022229fd17b39e1c9f52557bfb1e1d7f",
-      "tools": [
-        "target",
-        "scan",
-        "qualify",
-        "pending",
-        "redesign",
-        "queue",
-        "deploy",
-        "draft",
-        "send",
-        "contacted",
-        "followup",
-        "ready",
-        "discover",
-        "nomail",
-        "config",
-        "showcase",
-        "showcased",
-        "pipeline",
-        "status",
-        "sites",
-        "history"
-      ],
-      "assets": [],
-      "photonType": "workflow",
-      "features": [
-        "generator",
-        "elicitation",
-        "streaming",
-        "stateful"
       ]
     }
   ]

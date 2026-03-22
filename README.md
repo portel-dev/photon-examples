@@ -123,29 +123,22 @@ Built on the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/intr
 | Photon | Focus | Tools | Features |
 |--------|-------|-------|----------|
 | [**Ag Ui Showcase**](ag-ui-showcase.md) | AG-UI Event Showcase Demonstrates how photon yields map to AG-UI protocol events. String yields become TEXT_MESSAGE events, progress yields become STEP events, and return values become STATE_SNAPSHOT events. | 3 | ⚡ |
-| [**Autoloop**](autoloop.md) | AutoLoop — Self-Improving Optimization Loop Applies Karpathy's auto-research pattern to anything with a measurable output. Give it a file to optimize, binary eval criteria, and a way to measure results. It pulls real data, scores outputs, finds what works, rewrites the file, and logs every change. Each instance (`_use`) is a separate optimization target: `_use('video-hooks')` — optimize video script hooks `_use('email-subject')` — optimize email subject lines `_use('landing-cta')` — optimize landing page CTAs | 13 | - |
-| [**Autorun**](autorun.md) | AutoRun — Orchestrates self-improvement loops for any photon A meta-photon that automates the Karpathy auto-research pattern. Point it at any photon that follows the AutoResearch interface, and it runs the full loop: pull → eval → analyze → improve → log. Target photons must implement these methods: `prompt()`              → returns current prompt/template content `update({ content })`   → writes the improved version `pull()`                → returns performance data points `criteria()`            → returns binary eval criteria The calling LLM acts as the eval engine — the `run` generator yields each output for scoring, then asks the LLM to analyze and improve. Usage: `_use('my-content')` — one instance per optimization target `autorun start --target content --interval daily` | 6 | ⚡💬⚡ |
 | [**Background Job**](background-job.md) | Background Job Processor Demonstrates MCP Tasks for fire-and-forget async operations. Designed for tasks/create — the client gets a task ID immediately and polls tasks/get for progress and results. | 2 | ⚡ |
 | [**Context Aware**](context-aware.md) | Context-Aware Photon Demonstrates bidirectional state exposure where frontend widget state flows into photon methods via this._clientState. | 2 | - |
 | [**Deploy Pipeline**](deploy-pipeline.md) | Deploy Pipeline Demonstrates persistent approvals for destructive operations. Approval confirmations survive page navigation and server restarts. | 2 | ⚡ |
 | [**Discoverable**](discoverable.md) | Discoverable Service Demonstrates Server Cards and A2A Agent Cards. Both card types are auto-generated from the same photon metadata — rich docblocks, @stateful tag, and method descriptions map directly to MCP Server Card tools and A2A Agent Card skills. | 3 | - |
 | [**Docs**](docs.md) | Docs — Markdown Document Editor with PDF Export A document editor backed by plain markdown files with YAML frontmatter. Each instance is a document: `_use('quarterly-report')` → `quarterly-report.md`. Pass a full path to open any file: `_use('/path/to/doc.md')`. Features page-aware preview via Paged.js, TOC generation, footnotes, custom containers (note/warning/tip), multi-column layouts, and PDF export. | 11 | 🎨 |
-| [**Email Subject**](email-subject.md) | Email Subject — AutoResearch target for email subject lines Implements the AutoResearch interface so autorun can optimize your email subject lines based on real open rates. Stores the template and pulls metrics from a CSV log. | 7 | - |
-| [**Gbp Manager**](gbp-manager.md) | GBP Manager — Google Business Profile Optimization for Local Services Automated Google Business Profile management that finds local service businesses with weak profiles, audits them, responds to reviews, generates posts, and delivers monthly performance reports. Each instance (`_use`) is one client business: `_use('ace-plumbing')` `_use('cool-air-hvac')` `_use('summit-roofing')` | 19 | - |
 | [**Input Showcase**](input-showcase.md) | Input Showcase Demonstrates all input format types in the Photon auto-UI. Each method showcases a different input widget. | 22 | - |
-| [**Landing Copy**](landing-copy.md) | Landing Copy — AutoResearch target for landing page copy Implements the AutoResearch interface so autorun can optimize your landing page hero copy based on conversion rates. Stores variants and tracks which ones convert. | 7 | - |
 | [**Observable**](observable.md) | Observable Computation Service Demonstrates OpenTelemetry GenAI instrumentation. When @opentelemetry/api is installed, all tool calls produce gen_ai.tool.call spans with standardized attributes. Without the package, everything works with zero overhead. | 2 | - |
 | [**Pizzaz Shop**](pizzaz-shop.md) | AI Pizza Ordering Assistant Demonstrates the AI+Human transaction workflow for food ordering: 1. AI suggests pizzas based on preferences 2. Human selects and customizes items 3. Human reviews cart and confirms order 4. System processes order with delivery info | 5 | ⚡ |
 | [**Render Showcase**](render-showcase.md) | Render Showcase Demonstrates photon.render() — how custom UIs can use auto UI format renderers (table, gauge, chart, etc.) without building everything from scratch. Each method returns sample data in a shape that a specific format renderer understands. The custom UI dashboard calls photon.render(container, data, format) to visualize them. | 13 | 🎨🎨 |
 | [**Shopping Cart**](shopping-cart.md) | AI Shopping Assistant Demonstrates the AI+Human transaction workflow for e-commerce: 1. AI suggests products based on query 2. Human reviews and selects items 3. Human confirms purchase 4. System processes order | 4 | ⚡ |
 | [**Slides**](slides.md) | Slides — AI-Native Presentation Tool Each instance is a deck: `_use('quarterly-review')` → `quarterly-review.md`. Pass a full path to open any markdown file: `_use('/path/to/deck.md')`. | 14 | 🎨🎨 |
-| [**Social Hooks**](social-hooks.md) | Social Hooks — AutoResearch target for video/social media hooks Implements the AutoResearch interface so autorun can optimize your video hooks based on real view counts. Stores the prompt template as a markdown file and pulls metrics from a CSV log. Feed your view counts into the CSV and let the loop optimize which hook patterns get the most views. | 7 | - |
 | [**Spreadsheet**](spreadsheet.md) | Spreadsheet — CSV-backed spreadsheet with formulas A spreadsheet engine that works on plain CSV files. Formulas (=SUM, =AVG, etc.) are stored directly in CSV cells and evaluated at runtime. Named instances map to CSV files: `_use('budget')` → `budget.csv` in your spreadsheets folder. Pass a full path to open any CSV: `_use('/path/to/data.csv')`. | 37 | 🎨🎨 |
 | [**Walkthrough**](walkthrough.md) | Photon Walkthrough An interactive step-by-step guide to building photons. Every demo is a real method on this photon — zero external dependencies. The slides show code for named classes, but the live UI calls these methods. | 8 | ⚡⚡ |
-| [**Web Glow**](web-glow.md) | WebGlow — Automated Website Redesign Pipeline Finds local businesses with ugly websites, redesigns them into polished demos, deploys them for free, and queues outreach. Schedule it daily to generate a steady stream of leads. Pipeline: scan → qualify → redesign → deploy → outreach Each instance (`_use`) targets a niche + city: `_use('nail-salons-sydney')` `_use('wedding-venues-london')` `_use('restaurants-austin')` | 21 | ⚡💬⚡ |
 
 
-**Total:** 21 photons ready to use
+**Total:** 14 photons ready to use
 
 ---
 
@@ -189,7 +182,7 @@ Output (paste directly into your MCP client config):
 
 Add the output to your MCP client's configuration. **Consult your client's documentation** for setup instructions.
 
-**That's it!** Your AI assistant now has 21 focused tools at its fingertips.
+**That's it!** Your AI assistant now has 14 focused tools at its fingertips.
 
 ---
 
@@ -255,7 +248,7 @@ Each photon delivers **singular focus** to a **precise target**.
 
 **Key Features:**
 - 🎯 Each photon does one thing perfectly
-- 📦 21 production-ready photons available
+- 📦 14 production-ready photons available
 - ⚡ Auto-installs dependencies
 - 🔧 Works out of the box
 - 📄 Single-file design (easy to fork and customize)
