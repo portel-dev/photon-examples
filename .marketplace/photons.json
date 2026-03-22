@@ -1,0 +1,358 @@
+{
+  "name": "photon-examples",
+  "version": "1.14.0",
+  "photons": [
+    {
+      "name": "ag-ui-showcase",
+      "version": "1.0.0",
+      "description": "AG-UI Event Showcase Demonstrates how photon yields map to AG-UI protocol events. String yields become TEXT_MESSAGE events, progress yields become STEP events, and return values become STATE_SNAPSHOT events.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": null,
+      "source": "../ag-ui-showcase.photon.ts",
+      "hash": "sha256:2d14627525024a299563c4818389fcc847a15306e04e56a01d703630a2727820",
+      "contentHash": "sha256:2d14627525024a299563c4818389fcc847a15306e04e56a01d703630a2727820",
+      "tools": [
+        "stream",
+        "progress",
+        "snapshot"
+      ],
+      "assets": [],
+      "photonType": "streaming",
+      "features": [
+        "generator"
+      ]
+    },
+    {
+      "name": "background-job",
+      "version": "1.0.0",
+      "description": "Background Job Processor Demonstrates MCP Tasks for fire-and-forget async operations. Designed for tasks/create — the client gets a task ID immediately and polls tasks/get for progress and results.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": null,
+      "source": "../background-job.photon.ts",
+      "hash": "sha256:80d9fa00ed221b74ed6337aa2f308f72ed9e384bd60519db33ed9e89b2eb0a3d",
+      "contentHash": "sha256:80d9fa00ed221b74ed6337aa2f308f72ed9e384bd60519db33ed9e89b2eb0a3d",
+      "tools": [
+        "process",
+        "status"
+      ],
+      "assets": [],
+      "photonType": "streaming",
+      "features": [
+        "generator"
+      ]
+    },
+    {
+      "name": "context-aware",
+      "version": "1.0.0",
+      "description": "Context-Aware Photon Demonstrates bidirectional state exposure where frontend widget state flows into photon methods via this._clientState.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": null,
+      "source": "../context-aware.photon.ts",
+      "hash": "sha256:f6ec54cbeb06f684cfa22da79bfa2235051376861dcb24c6461809336d659248",
+      "contentHash": "sha256:f6ec54cbeb06f684cfa22da79bfa2235051376861dcb24c6461809336d659248",
+      "tools": [
+        "suggest",
+        "context"
+      ],
+      "assets": [],
+      "photonType": "api",
+      "features": []
+    },
+    {
+      "name": "deploy-pipeline",
+      "version": "1.0.0",
+      "description": "Deploy Pipeline Demonstrates persistent approvals for destructive operations. Approval confirmations survive page navigation and server restarts.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": null,
+      "source": "../deploy-pipeline.photon.ts",
+      "hash": "sha256:3d3b47f5a9e91b7d87af3604da763b27701a34a89208995102e88b9f6ad5bfb1",
+      "contentHash": "sha256:3d3b47f5a9e91b7d87af3604da763b27701a34a89208995102e88b9f6ad5bfb1",
+      "tools": [
+        "deploy",
+        "history"
+      ],
+      "assets": [],
+      "photonType": "streaming",
+      "features": [
+        "generator"
+      ]
+    },
+    {
+      "name": "discoverable",
+      "version": "2.0.0",
+      "description": "Discoverable Service Demonstrates Server Cards and A2A Agent Cards. Both card types are auto-generated from the same photon metadata — rich docblocks, @stateful tag, and method descriptions map directly to MCP Server Card tools and A2A Agent Card skills.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "magnifying-glass",
+      "source": "../discoverable.photon.ts",
+      "hash": "sha256:597f19b78663d22b1821864081adb12ac24e6f7218b6ddceedf03defa2f0a102",
+      "contentHash": "sha256:597f19b78663d22b1821864081adb12ac24e6f7218b6ddceedf03defa2f0a102",
+      "tools": [
+        "search",
+        "detail",
+        "catalog"
+      ],
+      "assets": [],
+      "photonType": "api",
+      "features": [
+        "stateful"
+      ]
+    },
+    {
+      "name": "docs",
+      "version": "1.0.0",
+      "description": "Docs — Markdown Document Editor with PDF Export A document editor backed by plain markdown files with YAML frontmatter. Each instance is a document: `_use('quarterly-report')` → `quarterly-report.md`. Pass a full path to open any file: `_use('/path/to/doc.md')`. Features page-aware preview via Paged.js, TOC generation, footnotes, custom containers (note/warning/tip), multi-column layouts, and PDF export.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "📄",
+      "source": "../docs.photon.ts",
+      "hash": "sha256:1952d49524be941549319f0ffdaeb74fc0b5a500d7e37cccb75122a9570505d1",
+      "contentHash": "sha256:cac73d4f060dcd8568c53cbfebbf5c674535242af5ebf32796b74b2cfdcb74a9",
+      "tools": [
+        "main",
+        "read",
+        "save",
+        "outline",
+        "edit",
+        "append",
+        "find",
+        "replace",
+        "list",
+        "toc",
+        "stats"
+      ],
+      "assets": [
+        "docs/ui/docs.html",
+        "ui/docs.html"
+      ],
+      "photonType": "api",
+      "features": [
+        "custom-ui",
+        "stateful"
+      ]
+    },
+    {
+      "name": "input-showcase",
+      "version": "1.0.0",
+      "description": "Input Showcase Demonstrates all input format types in the Photon auto-UI. Each method showcases a different input widget.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "🎛️",
+      "source": "../input-showcase.photon.ts",
+      "hash": "sha256:98d5f2207e707521d06079e74c101f44a865d08e65f8dd9cefc3ca867fe73804",
+      "contentHash": "sha256:98d5f2207e707521d06079e74c101f44a865d08e65f8dd9cefc3ca867fe73804",
+      "tools": [],
+      "assets": [],
+      "photonType": "api",
+      "features": []
+    },
+    {
+      "name": "observable",
+      "version": "1.0.0",
+      "description": "Observable Computation Service Demonstrates OpenTelemetry GenAI instrumentation. When @opentelemetry/api is installed, all tool calls produce gen_ai.tool.call spans with standardized attributes. Without the package, everything works with zero overhead.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": null,
+      "source": "../observable.photon.ts",
+      "hash": "sha256:043c57b6b3b34cef533ba65b0394ca13287c832d3214a260845d1afc2dbf0685",
+      "contentHash": "sha256:043c57b6b3b34cef533ba65b0394ca13287c832d3214a260845d1afc2dbf0685",
+      "tools": [
+        "compute",
+        "check"
+      ],
+      "assets": [],
+      "photonType": "api",
+      "features": []
+    },
+    {
+      "name": "pizzaz-shop",
+      "version": "1.0.0",
+      "description": "Pizzaz Shop - AI Pizza Ordering Assistant Demonstrates the AI+Human transaction workflow for food ordering: 1. AI suggests pizzas based on preferences 2. Human selects and customizes items 3. Human reviews cart and confirms order 4. System processes order with delivery info",
+      "author": "Photon Team",
+      "license": "MIT",
+      "icon": null,
+      "source": "../pizzaz-shop.photon.ts",
+      "hash": "sha256:0803ed47ebc375a2e6fcff756f25055d05e61a17fe5e1a2c9246fb2d086dd52c",
+      "contentHash": "sha256:0803ed47ebc375a2e6fcff756f25055d05e61a17fe5e1a2c9246fb2d086dd52c",
+      "tools": [
+        "browseMenu",
+        "recommend",
+        "viewCart",
+        "checkout",
+        "cartStatus"
+      ],
+      "assets": [],
+      "photonType": "streaming",
+      "features": [
+        "generator"
+      ]
+    },
+    {
+      "name": "render-showcase",
+      "version": "1.0.0",
+      "description": "Render Showcase Demonstrates photon.render() — how custom UIs can use auto UI format renderers (table, gauge, chart, etc.) without building everything from scratch. Each method returns sample data in a shape that a specific format renderer understands. The custom UI dashboard calls photon.render(container, data, format) to visualize them.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "🎨",
+      "source": "../render-showcase.photon.ts",
+      "hash": "sha256:63ac51416e28266647fe30a6deab1d2a9c39c8f0f920390f33a2ac989bcede03",
+      "contentHash": "sha256:14061cbb15a0884797872c818f8b30e7aa214293c3437dc84bd69cdbb107882e",
+      "tools": [
+        "main"
+      ],
+      "assets": [
+        "render-showcase/ui/dashboard.html",
+        "render-showcase/ui/dashboard.photon.html",
+        "ui/dashboard.html"
+      ],
+      "photonType": "api",
+      "features": [
+        "custom-ui",
+        "dashboard"
+      ]
+    },
+    {
+      "name": "shopping-cart",
+      "version": "1.0.0",
+      "description": "AI Shopping Assistant Demonstrates the AI+Human transaction workflow for e-commerce: 1. AI suggests products based on query 2. Human reviews and selects items 3. Human confirms purchase 4. System processes order",
+      "author": "Photon Team",
+      "license": "MIT",
+      "icon": null,
+      "source": "../shopping-cart.photon.ts",
+      "hash": "sha256:594d5711bddf368f261b8873dc1bd7b068d103b49aea6f166c47a17a3d2b1f01",
+      "contentHash": "sha256:594d5711bddf368f261b8873dc1bd7b068d103b49aea6f166c47a17a3d2b1f01",
+      "tools": [
+        "search",
+        "viewCart",
+        "checkout",
+        "cartStatus"
+      ],
+      "assets": [],
+      "photonType": "streaming",
+      "features": [
+        "generator"
+      ]
+    },
+    {
+      "name": "slides",
+      "version": "1.0.0",
+      "description": "Slides — AI-Native Presentation Tool Each instance is a deck: `_use('quarterly-review')` → `quarterly-review.md`. Pass a full path to open any markdown file: `_use('/path/to/deck.md')`.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "📽️",
+      "source": "../slides.photon.ts",
+      "hash": "sha256:a2d40d3faa8dcdb68a05d1df39f3ed8eff11801d7d5fc3217f3d7d6ca60fb8c2",
+      "contentHash": "sha256:d192f0e55e32b3f9d6f0153414d89eb77c714b9aa51a3b1d0ed54fd6d131e57b",
+      "tools": [
+        "main",
+        "next",
+        "previous",
+        "go",
+        "list",
+        "read",
+        "save",
+        "update",
+        "add",
+        "edit",
+        "move",
+        "remove",
+        "duplicate",
+        "status"
+      ],
+      "assets": [
+        "slides/ui/slides.html",
+        "ui/slides.html"
+      ],
+      "photonType": "api",
+      "features": [
+        "custom-ui",
+        "stateful",
+        "dashboard"
+      ]
+    },
+    {
+      "name": "spreadsheet",
+      "version": "1.1.0",
+      "description": "Spreadsheet — CSV-backed spreadsheet with formulas A spreadsheet engine that works on plain CSV files. Formulas (=SUM, =AVG, etc.) are stored directly in CSV cells and evaluated at runtime. Named instances map to CSV files: `_use('budget')` → `budget.csv` in your spreadsheets folder. Pass a full path to open any CSV: `_use('/path/to/data.csv')`.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "📊",
+      "source": "../spreadsheet.photon.ts",
+      "hash": "sha256:baa91e3311f77c3e6ffa1c0a7c16fd5a1c78df4f647b0163548645b68d41d33f",
+      "contentHash": "sha256:774aedaec7604d04731b620f1186f9917320f840d5d23af15c6d9d3cab8783ab",
+      "tools": [
+        "main",
+        "list_tables",
+        "list_records",
+        "lookup",
+        "get_record",
+        "create_record",
+        "update_record",
+        "delete_record",
+        "search_records",
+        "view",
+        "get",
+        "set",
+        "add",
+        "remove",
+        "removeColumn",
+        "insertRow",
+        "insertColumn",
+        "upsert",
+        "search",
+        "update",
+        "query",
+        "sort",
+        "fill",
+        "schema",
+        "resize",
+        "ingest",
+        "dump",
+        "clear",
+        "rename",
+        "format",
+        "tail",
+        "untail",
+        "push",
+        "sql",
+        "watch",
+        "unwatch",
+        "watches"
+      ],
+      "assets": [
+        "spreadsheet/ui/spreadsheet.html",
+        "ui/spreadsheet.html"
+      ],
+      "photonType": "api",
+      "features": [
+        "custom-ui",
+        "stateful",
+        "dashboard"
+      ]
+    },
+    {
+      "name": "walkthrough",
+      "version": "2.0.0",
+      "description": "Photon Walkthrough An interactive step-by-step guide to building photons. Every demo is a real method on this photon — zero external dependencies. The slides show code for named classes, but the live UI calls these methods.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "📖",
+      "source": "../walkthrough.photon.ts",
+      "hash": "sha256:fa352f8971077471515023ec803ed9af092999010a9758fef30c5637f251afb6",
+      "contentHash": "sha256:fa352f8971077471515023ec803ed9af092999010a9758fef30c5637f251afb6",
+      "tools": [
+        "monitor"
+      ],
+      "assets": [],
+      "photonType": "workflow",
+      "features": [
+        "generator",
+        "streaming"
+      ]
+    }
+  ]
+}
