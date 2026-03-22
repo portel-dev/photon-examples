@@ -219,6 +219,43 @@
       ]
     },
     {
+      "name": "gbp-manager",
+      "version": "1.0.0",
+      "description": "GBP Manager — Google Business Profile Optimization for Local Services Automated Google Business Profile management that finds local service businesses with weak profiles, audits them, responds to reviews, generates posts, and delivers monthly performance reports. Each instance (`_use`) is one client business: `_use('ace-plumbing')` `_use('cool-air-hvac')` `_use('summit-roofing')`",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "📍",
+      "source": "../gbp-manager.photon.ts",
+      "hash": "sha256:10b3678050d1fb035a6669bcb164a8df34eccd6ce0053024bce435374a8df484",
+      "contentHash": "sha256:10b3678050d1fb035a6669bcb164a8df34eccd6ce0053024bce435374a8df484",
+      "tools": [
+        "prospect",
+        "pitch",
+        "onboard",
+        "tier",
+        "audit",
+        "audits",
+        "reviews",
+        "unanswered",
+        "respond",
+        "replied",
+        "draft",
+        "post",
+        "published",
+        "history",
+        "competitors",
+        "report",
+        "responses",
+        "posts",
+        "status"
+      ],
+      "assets": [],
+      "photonType": "api",
+      "features": [
+        "stateful"
+      ]
+    },
+    {
       "name": "input-showcase",
       "version": "1.0.0",
       "description": "Input Showcase Demonstrates all input format types in the Photon auto-UI. Each method showcases a different input widget.",
