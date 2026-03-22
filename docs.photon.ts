@@ -13,7 +13,7 @@
  * @tags document, markdown, pdf, writing, authoring
  * @icon 📄
  * @stateful
- * @ui editor ./ui/docs.html
+ * @ui docs
  */
 import * as fs from 'fs/promises';
 import { existsSync, mkdirSync } from 'fs';
@@ -101,7 +101,7 @@ export default class Docs {
 
   /**
    * Open the document editor UI
-   * @ui editor
+   * @ui docs
    * @autorun
    */
   async main() {
@@ -128,7 +128,7 @@ export default class Docs {
   /**
    * Save the full document markdown
    * @param markdown Full markdown content with YAML frontmatter
-   * @ui editor
+   * @ui docs
    */
   async save({ markdown }: { markdown: string }) {
     await fs.writeFile(this.docPath, markdown, 'utf8');
@@ -159,7 +159,7 @@ export default class Docs {
    * Edit a specific section by heading path
    * @param section Heading text or path like "Chapter 3/Introduction"
    * @param markdown New content for that section (everything under the heading until next same-level heading)
-   * @ui editor
+   * @ui docs
    */
   async edit({ section, markdown: newContent }: { section: string; markdown: string }) {
     const doc = await this.readDoc();
@@ -184,7 +184,7 @@ export default class Docs {
    * Append content at the end of the document or after a specific section
    * @param markdown Content to append
    * @param after Optional heading text — inserts after that section instead of end
-   * @ui editor
+   * @ui docs
    */
   async append({ markdown: content, after }: { markdown: string; after?: string }) {
     const doc = await this.readDoc();
@@ -245,7 +245,7 @@ export default class Docs {
    * @param replacement Replacement text
    * @param scope Limit to a section heading
    * @param all Replace all occurrences {@default true}
-   * @ui editor
+   * @ui docs
    */
   async replace({
     pattern,

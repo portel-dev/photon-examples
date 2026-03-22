@@ -110,8 +110,8 @@
       "license": "MIT",
       "icon": "📄",
       "source": "../docs.photon.ts",
-      "hash": "sha256:1952d49524be941549319f0ffdaeb74fc0b5a500d7e37cccb75122a9570505d1",
-      "contentHash": "sha256:cac73d4f060dcd8568c53cbfebbf5c674535242af5ebf32796b74b2cfdcb74a9",
+      "hash": "sha256:a9968c9d6c5bea8ea36cb9718cbc88068fd287222e5ca91efa77e8f1a6d085e8",
+      "contentHash": "sha256:61f08aa6e0192892bcda34877d99d76bebcd677a985f60872946bbdde15e42e2",
       "tools": [
         "main",
         "read",
@@ -126,8 +126,7 @@
         "stats"
       ],
       "assets": [
-        "docs/ui/docs.html",
-        "ui/docs.html"
+        "docs/ui/docs.html"
       ],
       "photonType": "api",
       "features": [
@@ -280,8 +279,8 @@
       "license": "MIT",
       "icon": "📽️",
       "source": "../slides.photon.ts",
-      "hash": "sha256:a2d40d3faa8dcdb68a05d1df39f3ed8eff11801d7d5fc3217f3d7d6ca60fb8c2",
-      "contentHash": "sha256:d192f0e55e32b3f9d6f0153414d89eb77c714b9aa51a3b1d0ed54fd6d131e57b",
+      "hash": "sha256:bf24be4a60067c02f5057b61d88c0cb904ee864f4331618ff8397c1bb9ed9268",
+      "contentHash": "sha256:86184d874e606d2db742766a4b285ec520c85f0cb9e1b6fda862c55d37ad9c8b",
       "tools": [
         "main",
         "next",
@@ -299,14 +298,12 @@
         "status"
       ],
       "assets": [
-        "slides/ui/slides.html",
-        "ui/slides.html"
+        "slides/ui/slides.html"
       ],
       "photonType": "api",
       "features": [
         "custom-ui",
-        "stateful",
-        "dashboard"
+        "stateful"
       ]
     },
     {
@@ -317,8 +314,8 @@
       "license": "MIT",
       "icon": "📊",
       "source": "../spreadsheet.photon.ts",
-      "hash": "sha256:baa91e3311f77c3e6ffa1c0a7c16fd5a1c78df4f647b0163548645b68d41d33f",
-      "contentHash": "sha256:774aedaec7604d04731b620f1186f9917320f840d5d23af15c6d9d3cab8783ab",
+      "hash": "sha256:9307dca3c4eedbbe1718315b9b703ae34298722fbe45ac4b8cbc483ee6dd217e",
+      "contentHash": "sha256:fb928425a35782ca25acc10db7555b0c1571d74277b92440fd2d9625baaab2ff",
       "tools": [
         "main",
         "list_tables",
@@ -359,14 +356,12 @@
         "watches"
       ],
       "assets": [
-        "spreadsheet/ui/spreadsheet.html",
-        "ui/spreadsheet.html"
+        "spreadsheet/ui/spreadsheet.html"
       ],
       "photonType": "api",
       "features": [
         "custom-ui",
-        "stateful",
-        "dashboard"
+        "stateful"
       ]
     },
     {

@@ -12,7 +12,7 @@
  * @icon 📊
  * @stateful
  * @dependencies @portel/csv@^1.0.0, alasql@^4.0.0
- * @ui dashboard ./ui/spreadsheet.html
+ * @ui spreadsheet
  */
 
 import * as fs from 'fs/promises';

@@ -10,7 +10,7 @@
  * @tags presentation, slides, markdown, marp, ai-control
  * @icon 📽️
  * @stateful
- * @ui dashboard ./ui/slides.html
+ * @ui slides
  */
 import * as fs from 'fs/promises';
 import { existsSync, mkdirSync } from 'fs';
@@ -98,7 +98,7 @@ export default class Slides {
 
   /**
    * Open the presentation UI
-   * @ui dashboard
+   * @ui slides
    * @autorun
    */
   async main() {
@@ -109,7 +109,7 @@ export default class Slides {
 
   /**
    * Move to the next slide
-   * @ui dashboard
+   * @ui slides
    */
   async next() {
     const markdown = await this.readDeck();
@@ -125,7 +125,7 @@ export default class Slides {
 
   /**
    * Move to the previous slide
-   * @ui dashboard
+   * @ui slides
    */
   async previous() {
     const state = await this.getState();
@@ -140,7 +140,7 @@ export default class Slides {
   /**
    * Jump to a specific slide
    * @param index 0-based slide index
-   * @ui dashboard
+   * @ui slides
    */
   async go({ index }: { index: number }) {
     const markdown = await this.readDeck();
@@ -189,7 +189,7 @@ export default class Slides {
   /**
    * Save markdown to the current deck
    * @param markdown Full Marp markdown content
-   * @ui dashboard
+   * @ui slides
    */
   async save({ markdown }: { markdown: string }) {
     await fs.writeFile(this.deckPath, markdown, 'utf8');
@@ -202,7 +202,7 @@ export default class Slides {
   /**
    * Update the full markdown and re-render
    * @param markdown New Marp markdown content
-   * @ui dashboard
+   * @ui slides
    */
   async update({ markdown }: { markdown: string }) {
     return this.save({ markdown });
@@ -214,7 +214,7 @@ export default class Slides {
    * Insert a new slide at a position
    * @param markdown Slide content
    * @param index Position to insert (appends if omitted)
-   * @ui dashboard
+   * @ui slides
    */
   async add(params?: { markdown?: string; index?: number }) {
     const md = await this.readDeck();
@@ -235,7 +235,7 @@ export default class Slides {
    * Replace a slide's content
    * @param index Slide index
    * @param markdown New content
-   * @ui dashboard
+   * @ui slides
    */
   async edit({ index, markdown }: { index: number; markdown: string }) {
     const md = await this.readDeck();
@@ -253,7 +253,7 @@ export default class Slides {
    * Reorder a slide
    * @param from Source index
    * @param to Target index
-   * @ui dashboard
+   * @ui slides
    */
   async move({ from, to }: { from: number; to: number }) {
     const md = await this.readDeck();
@@ -275,7 +275,7 @@ export default class Slides {
    * Delete a slide
    * @param index Slide index
    * @destructive
-   * @ui dashboard
+   * @ui slides
    */
   async remove({ index }: { index: number }) {
     const md = await this.readDeck();
@@ -295,7 +295,7 @@ export default class Slides {
   /**
    * Duplicate a slide
    * @param index Slide index to copy
-   * @ui dashboard
+   * @ui slides
    */
   async duplicate({ index }: { index: number }) {
     const md = await this.readDeck();
