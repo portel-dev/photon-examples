@@ -311,17 +311,25 @@
       flex-shrink: 0;
     }
 
-    .editor-header {
+    .editor-tabs {
       display: flex;
-      align-items: center;
-      padding: 6px 12px;
-      gap: 8px;
       border-bottom: 1px solid var(--line);
-      font-size: 12px;
-      color: var(--muted);
+      flex-shrink: 0;
     }
 
-    .editor-header span { font-weight: 600; }
+    .editor-tab {
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 8px 16px;
+      font-size: 12px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .editor-tab:hover { color: var(--text); }
+    .editor-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 
     .editor-textarea {
       flex: 1;
@@ -488,11 +496,12 @@
       </div>
       <div class="resize-handle" id="resize-handle"></div>
       <div class="editor-panel" id="editor-panel">
-        <div class="editor-header">
-          <span>Slide <span id="editor-slide-num">1</span></span>
-          <span style="margin-left:auto;font-size:11px;color:var(--muted)">Markdown</span>
+        <div class="editor-tabs">
+          <button class="editor-tab active" data-tab="markdown">Slide <span id="editor-slide-num">1</span></button>
+          <button class="editor-tab" data-tab="notes">Speaker Notes</button>
         </div>
         <textarea class="editor-textarea" id="editor" placeholder="Write slide content in Markdown..."></textarea>
+        <textarea class="editor-textarea" id="notes-editor" placeholder="Speaker notes (only visible in presenter view)..." style="display:none;"></textarea>
       </div>
     </div>
   </div>
@@ -540,6 +549,9 @@
       }
     }
 
+    let fullMarkdown = "";
+    let frontmatter = "";
+
     function loadDeck(data) {
       marpCSS = data.css || "";
       document.getElementById("marp-style").innerHTML = marpCSS;
@@ -549,12 +561,20 @@
       tmp.innerHTML = data.html || "";
       const sections = tmp.querySelectorAll(":scope > section, :scope > svg");
 
+      // Split full markdown into per-slide content
+      fullMarkdown = data.markdown || "";
+      const mdParts = splitMarkdownIntoSlides(fullMarkdown);
+      frontmatter = mdParts.frontmatter;
+
       slides = [];
       sections.forEach((el, i) => {
         const transMatch = el.innerHTML.match(/<!--\s*transition:\s*(\w+)\s*-->/);
+        const md = mdParts.slides[i] || "";
+        const notesMatch = md.match(/<!--\s*notes?\s*:\s*([\s\S]*?)\s*-->/i);
         slides.push({
           html: el.outerHTML,
-          markdown: data.slideMarkdowns?.[i] || "",
+          markdown: notesMatch ? md.replace(notesMatch[0], "").trim() : md,
+          notes: notesMatch ? notesMatch[1].trim() : "",
           transition: transMatch ? transMatch[1] : "fade",
         });
       });
@@ -562,6 +582,23 @@
       currentIdx = Math.min(data.current || 0, slides.length - 1);
       renderFilmstrip();
       selectSlide(currentIdx);
+    }
+
+    function splitMarkdownIntoSlides(md) {
+      // Marp format: frontmatter (---...---) then slides separated by ---
+      let frontmatter = "";
+      let body = md;
+
+      // Extract frontmatter
+      const fmMatch = md.match(/^---\n[\s\S]*?\n---\n?/);
+      if (fmMatch) {
+        frontmatter = fmMatch[0];
+        body = md.slice(fmMatch[0].length);
+      }
+
+      // Split remaining by --- on its own line
+      const slides = body.split(/\n---\n/).map(s => s.trim()).filter(s => s.length > 0);
+      return { frontmatter, slides };
     }
 
     // ── Filmstrip ──
@@ -623,11 +660,15 @@
         scalePreview();
       }
 
-      // Update editor
+      // Update markdown editor
       const editor = document.getElementById("editor");
       editor.value = slides[currentIdx]?.markdown || "";
       editorDirty = false;
       document.getElementById("editor-slide-num").textContent = currentIdx + 1;
+
+      // Update notes editor
+      const notesEditor = document.getElementById("notes-editor");
+      notesEditor.value = slides[currentIdx]?.notes || "";
 
       // Update transition dropdown
       document.getElementById("transition-select").value = slides[currentIdx]?.transition || "fade";
@@ -653,27 +694,40 @@
     function saveCurrentSlide() {
       if (!slides[currentIdx]) return;
       const editor = document.getElementById("editor");
+      const notesEditor = document.getElementById("notes-editor");
       const newMarkdown = editor.value;
-      if (newMarkdown === slides[currentIdx].markdown) return;
+      const newNotes = notesEditor.value;
 
       slides[currentIdx].markdown = newMarkdown;
+      slides[currentIdx].notes = newNotes;
       editorDirty = false;
 
-      // Send to server
+      // Rebuild full markdown and send to server
       if (slidesApp) {
-        slidesApp.edit({ index: currentIdx, markdown: newMarkdown }).then(r => {
+        const slideContents = slides.map(s => {
+          let content = s.markdown;
+          if (s.notes) content += `\n\n<!-- notes: ${s.notes} -->`;
+          return content;
+        });
+        const fullMd = frontmatter + slideContents.join("\n\n---\n\n");
+
+        slidesApp.save({ markdown: fullMd }).then(r => {
           const data = parseMCP(r);
           if (data && data.html) {
-            // Refresh just this slide's HTML
+            // Re-parse to get updated HTML
+            marpCSS = data.css || marpCSS;
+            document.getElementById("marp-style").innerHTML = marpCSS;
             const tmp = document.createElement("div");
-            tmp.innerHTML = data.html || "";
+            tmp.innerHTML = data.html;
             const sections = tmp.querySelectorAll(":scope > section, :scope > svg");
-            if (sections[currentIdx]) {
-              slides[currentIdx].html = sections[currentIdx].outerHTML;
-              document.getElementById("preview-inner").innerHTML = slides[currentIdx].html;
-              scalePreview();
-              renderFilmstrip();
-            }
+            sections.forEach((el, i) => {
+              if (slides[i]) slides[i].html = el.outerHTML;
+            });
+            // Update preview and thumbnails
+            const inner = document.getElementById("preview-inner");
+            if (slides[currentIdx]) inner.innerHTML = slides[currentIdx].html;
+            scalePreview();
+            renderFilmstrip();
           }
         });
       }
@@ -683,6 +737,24 @@
       editorDirty = true;
       clearTimeout(saveTimeout);
       saveTimeout = setTimeout(saveCurrentSlide, 800);
+    });
+
+    document.getElementById("notes-editor").addEventListener("input", () => {
+      editorDirty = true;
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(saveCurrentSlide, 800);
+    });
+
+    // ── Editor Tab Switching ──
+
+    document.querySelectorAll(".editor-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".editor-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        const which = tab.dataset.tab;
+        document.getElementById("editor").style.display = which === "markdown" ? "" : "none";
+        document.getElementById("notes-editor").style.display = which === "notes" ? "" : "none";
+      });
     });
 
     // ── Toolbar Actions ──
