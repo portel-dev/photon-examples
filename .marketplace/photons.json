@@ -342,12 +342,17 @@
       "license": "MIT",
       "icon": "📖",
       "source": "../walkthrough.photon.ts",
-      "hash": "sha256:fa352f8971077471515023ec803ed9af092999010a9758fef30c5637f251afb6",
+      "hash": "sha256:2b1645fc0cce25e0a63408f26515f966b2f78b39af134909cb53454ed3a8226c",
       "contentHash": "sha256:fa352f8971077471515023ec803ed9af092999010a9758fef30c5637f251afb6",
       "tools": [
         "monitor"
       ],
-      "assets": [],
+      "assets": [
+        "walkthrough/assets/beam-search-cli.png",
+        "walkthrough/assets/beam-search-panel.png",
+        "walkthrough/assets/slides.md",
+        "walkthrough/assets/walkthrough-app-panel.png"
+      ],
       "photonType": "workflow",
       "features": [
         "generator",
