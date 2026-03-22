@@ -124,6 +124,7 @@ Built on the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/intr
 |--------|-------|-------|----------|
 | [**Ag Ui Showcase**](ag-ui-showcase.md) | AG-UI Event Showcase Demonstrates how photon yields map to AG-UI protocol events. String yields become TEXT_MESSAGE events, progress yields become STEP events, and return values become STATE_SNAPSHOT events. | 3 | ⚡ |
 | [**Autoloop**](autoloop.md) | AutoLoop — Self-Improving Optimization Loop Applies Karpathy's auto-research pattern to anything with a measurable output. Give it a file to optimize, binary eval criteria, and a way to measure results. It pulls real data, scores outputs, finds what works, rewrites the file, and logs every change. Each instance (`_use`) is a separate optimization target: `_use('video-hooks')` — optimize video script hooks `_use('email-subject')` — optimize email subject lines `_use('landing-cta')` — optimize landing page CTAs | 13 | - |
+| [**Autorun**](autorun.md) | AutoRun — Orchestrates self-improvement loops for any photon A meta-photon that automates the Karpathy auto-research pattern. Point it at any photon that follows the AutoResearch interface, and it runs the full loop: pull → eval → analyze → improve → log. Target photons must implement these methods: `prompt()`              → returns current prompt/template content `update({ content })`   → writes the improved version `pull()`                → returns performance data points `criteria()`            → returns binary eval criteria The calling LLM acts as the eval engine — the `run` generator yields each output for scoring, then asks the LLM to analyze and improve. Usage: `_use('my-content')` — one instance per optimization target `autorun start --target content --interval daily` | 6 | ⚡💬⚡ |
 | [**Background Job**](background-job.md) | Background Job Processor Demonstrates MCP Tasks for fire-and-forget async operations. Designed for tasks/create — the client gets a task ID immediately and polls tasks/get for progress and results. | 2 | ⚡ |
 | [**Context Aware**](context-aware.md) | Context-Aware Photon Demonstrates bidirectional state exposure where frontend widget state flows into photon methods via this._clientState. | 2 | - |
 | [**Deploy Pipeline**](deploy-pipeline.md) | Deploy Pipeline Demonstrates persistent approvals for destructive operations. Approval confirmations survive page navigation and server restarts. | 2 | ⚡ |
@@ -139,7 +140,7 @@ Built on the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/intr
 | [**Walkthrough**](walkthrough.md) | Photon Walkthrough An interactive step-by-step guide to building photons. Every demo is a real method on this photon — zero external dependencies. The slides show code for named classes, but the live UI calls these methods. | 8 | ⚡⚡ |
 
 
-**Total:** 15 photons ready to use
+**Total:** 16 photons ready to use
 
 ---
 
@@ -183,7 +184,7 @@ Output (paste directly into your MCP client config):
 
 Add the output to your MCP client's configuration. **Consult your client's documentation** for setup instructions.
 
-**That's it!** Your AI assistant now has 15 focused tools at its fingertips.
+**That's it!** Your AI assistant now has 16 focused tools at its fingertips.
 
 ---
 
@@ -249,7 +250,7 @@ Each photon delivers **singular focus** to a **precise target**.
 
 **Key Features:**
 - 🎯 Each photon does one thing perfectly
-- 📦 15 production-ready photons available
+- 📦 16 production-ready photons available
 - ⚡ Auto-installs dependencies
 - 🔧 Works out of the box
 - 📄 Single-file design (easy to fork and customize)

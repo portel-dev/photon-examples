@@ -55,6 +55,33 @@
       ]
     },
     {
+      "name": "autorun",
+      "version": "1.0.0",
+      "description": "AutoRun — Orchestrates self-improvement loops for any photon A meta-photon that automates the Karpathy auto-research pattern. Point it at any photon that follows the AutoResearch interface, and it runs the full loop: pull → eval → analyze → improve → log. Target photons must implement these methods: `prompt()`              → returns current prompt/template content `update({ content })`   → writes the improved version `pull()`                → returns performance data points `criteria()`            → returns binary eval criteria The calling LLM acts as the eval engine — the `run` generator yields each output for scoring, then asks the LLM to analyze and improve. Usage: `_use('my-content')` — one instance per optimization target `autorun start --target content --interval daily`",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "⚡",
+      "source": "../autorun.photon.ts",
+      "hash": "sha256:620148614d0868aeef496be544442ce8c455e101602ba99f1d9cd6e868585533",
+      "contentHash": "sha256:620148614d0868aeef496be544442ce8c455e101602ba99f1d9cd6e868585533",
+      "tools": [
+        "run",
+        "start",
+        "stop",
+        "log",
+        "handoff",
+        "status"
+      ],
+      "assets": [],
+      "photonType": "workflow",
+      "features": [
+        "generator",
+        "elicitation",
+        "streaming",
+        "stateful"
+      ]
+    },
+    {
       "name": "background-job",
       "version": "1.0.0",
       "description": "Background Job Processor Demonstrates MCP Tasks for fire-and-forget async operations. Designed for tasks/create — the client gets a task ID immediately and polls tasks/get for progress and results.",
