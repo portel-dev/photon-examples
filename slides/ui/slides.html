@@ -7,13 +7,16 @@
   <style id="marp-style"></style>
   <style>
     :root {
-      --ai-accent: #67c7ff;
+      --accent: #67c7ff;
       --bg: #0a0e1a;
-      --surface: rgba(15, 20, 35, 0.95);
+      --surface: #111827;
+      --surface2: #1a2035;
       --line: rgba(255,255,255,0.1);
       --text: #e5e5e5;
       --muted: rgba(255,255,255,0.45);
       --spring: cubic-bezier(0.16, 1, 0.3, 1);
+      --filmstrip-w: 180px;
+      --toolbar-h: 44px;
     }
 
     * { box-sizing: border-box; margin: 0; }
@@ -25,212 +28,69 @@
       font-family: system-ui, -apple-system, sans-serif;
       height: 100vh;
       width: 100vw;
-    }
-
-    /* ── Marp Viewport ── */
-
-    #marp-container {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Marp with inlineSVG renders <svg> inside each <section>.
-       We hide all sections then show the active one scaled to fill. */
-    #marp-container > section,
-    #marp-container > svg {
-      display: none;
-      position: absolute;
-      inset: 0;
-      width: 100% !important;
-      height: 100% !important;
-    }
-
-    #marp-container > section.active,
-    #marp-container > svg.active {
-      display: block;
-    }
-
-    /* Scale Marp's internal SVG to fill viewport */
-    #marp-container > section.active > svg,
-    #marp-container > svg.active {
-      width: 100% !important;
-      height: 100% !important;
-    }
-
-    /* ── Slide Transitions ── */
-
-    @keyframes t-fade {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes t-slide-right {
-      from { opacity: 0; transform: translateX(80px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes t-slide-left {
-      from { opacity: 0; transform: translateX(-80px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes t-slide-up {
-      from { opacity: 0; transform: translateY(60px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes t-scale {
-      from { opacity: 0; transform: scale(0.85); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    @keyframes t-flip {
-      from { opacity: 0; transform: perspective(1200px) rotateY(90deg); }
-      to { opacity: 1; transform: perspective(1200px) rotateY(0); }
-    }
-    @keyframes t-zoom {
-      from { opacity: 0; transform: scale(1.3); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    @keyframes t-drop {
-      from { opacity: 0; transform: translateY(-80px) scale(0.9); }
-      50% { opacity: 1; transform: translateY(8px) scale(1.02); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    @keyframes t-rotate {
-      from { opacity: 0; transform: rotate(-8deg) scale(0.9); }
-      to { opacity: 1; transform: rotate(0) scale(1); }
-    }
-
-    /* Apply transition to active slide based on container's data-transition */
-    [data-transition="fade"] > .active { animation: t-fade 0.5s ease-out both; }
-    [data-transition="slide"] > .active { animation: t-slide-right 0.5s var(--spring) both; }
-    [data-transition="slide-back"] > .active { animation: t-slide-left 0.5s var(--spring) both; }
-    [data-transition="push"] > .active { animation: t-slide-up 0.5s var(--spring) both; }
-    [data-transition="scale"] > .active { animation: t-scale 0.5s var(--spring) both; }
-    [data-transition="flip"] > .active { animation: t-flip 0.6s var(--spring) both; }
-    [data-transition="zoom"] > .active { animation: t-zoom 0.5s var(--spring) both; }
-    [data-transition="drop"] > .active { animation: t-drop 0.6s var(--spring) both; }
-    [data-transition="rotate"] > .active { animation: t-rotate 0.5s var(--spring) both; }
-    [data-transition="none"] > .active { animation: none; }
-
-    /* ── Element Build Animations ── */
-
-    @keyframes el-fade-in { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes el-slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes el-slide-right { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes el-scale { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
-    @keyframes el-flip { from { opacity: 0; transform: perspective(600px) rotateX(90deg); } to { opacity: 1; transform: perspective(600px) rotateX(0); } }
-    @keyframes el-typewriter { from { max-width: 0; } to { max-width: 100%; } }
-
-    /* Element animations applied via data attributes in Marp markdown HTML comments */
-    [data-build="fade"] { animation: el-fade-in 0.4s ease-out both; }
-    [data-build="slide-up"] { animation: el-slide-up 0.4s var(--spring) both; }
-    [data-build="slide-right"] { animation: el-slide-right 0.4s var(--spring) both; }
-    [data-build="scale"] { animation: el-scale 0.4s var(--spring) both; }
-    [data-build="flip"] { animation: el-flip 0.5s var(--spring) both; }
-
-    /* Stagger children of elements marked with data-stagger */
-    [data-stagger] > * { animation: el-slide-up 0.35s var(--spring) both; }
-    [data-stagger] > *:nth-child(1) { animation-delay: 0s; }
-    [data-stagger] > *:nth-child(2) { animation-delay: 0.08s; }
-    [data-stagger] > *:nth-child(3) { animation-delay: 0.16s; }
-    [data-stagger] > *:nth-child(4) { animation-delay: 0.24s; }
-    [data-stagger] > *:nth-child(5) { animation-delay: 0.32s; }
-    [data-stagger] > *:nth-child(6) { animation-delay: 0.40s; }
-    [data-stagger] > *:nth-child(n+7) { animation-delay: 0.48s; }
-
-    /* ── Controls Bar ── */
-
-    .controls {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 200;
       display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      gap: 12px;
-      padding: 80px 20px 12px;
-      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 50%, transparent);
-      backdrop-filter: blur(8px);
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      flex-direction: column;
     }
 
-    .controls:hover,
-    .controls:focus-within {
-      opacity: 1;
+    /* ══════════════════════════════════════════
+       TOOLBAR
+       ══════════════════════════════════════════ */
+
+    .toolbar {
+      height: var(--toolbar-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+      flex-shrink: 0;
+      z-index: 100;
     }
 
-    .ctrl-btn {
-      background: rgba(255,255,255,0.08);
+    .toolbar .deck-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-right: auto;
+    }
+
+    .toolbar .ai-dot {
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2.5s infinite;
+    }
+
+    .tb-btn {
+      background: rgba(255,255,255,0.06);
       border: 1px solid var(--line);
       color: var(--text);
       cursor: pointer;
-      font-size: 14px;
-      padding: 7px 14px;
-      border-radius: 8px;
-      transition: background 0.15s, transform 0.1s;
+      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: 6px;
       white-space: nowrap;
+      transition: background 0.15s;
     }
 
-    .ctrl-btn:hover { background: rgba(255,255,255,0.15); transform: translateY(-1px); }
-    .ctrl-btn:disabled { opacity: 0.25; cursor: default; transform: none; }
-    .ctrl-btn.active { background: rgba(103,199,255,0.2); border-color: rgba(103,199,255,0.4); }
+    .tb-btn:hover { background: rgba(255,255,255,0.12); }
+    .tb-btn.primary { background: rgba(103,199,255,0.15); border-color: rgba(103,199,255,0.3); color: var(--accent); }
+    .tb-btn.primary:hover { background: rgba(103,199,255,0.25); }
+    .tb-btn:disabled { opacity: 0.3; cursor: default; }
 
-    .ctrl-select {
+    .tb-select {
       background: rgba(255,255,255,0.06);
       border: 1px solid var(--line);
       color: var(--text);
       font-size: 12px;
-      padding: 6px 10px;
+      padding: 4px 8px;
       border-radius: 6px;
       cursor: pointer;
     }
+    .tb-select option { background: var(--surface); }
 
-    .ctrl-select option { background: #1a1e2e; }
-
-    .ctrl-divider {
-      width: 1px;
-      height: 24px;
-      background: var(--line);
-      flex-shrink: 0;
-    }
-
-    .progress {
-      font-size: 13px;
-      color: var(--muted);
-      min-width: 55px;
-      text-align: center;
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* ── Title Bar ── */
-
-    .title-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 200;
-      padding: 10px 20px 60px;
-      font-size: 12px;
-      color: var(--muted);
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
-    }
-
-    .title-bar:hover { opacity: 1; }
-
-    .ai-dot {
-      width: 6px; height: 6px;
-      background: var(--ai-accent);
-      border-radius: 50%;
-      animation: pulse 2.5s infinite;
-    }
+    .tb-sep { width: 1px; height: 20px; background: var(--line); flex-shrink: 0; }
 
     @keyframes pulse {
       0% { box-shadow: 0 0 0 0 rgba(103,199,255,0.5); }
@@ -238,9 +98,240 @@
       100% { box-shadow: 0 0 0 0 rgba(103,199,255,0); }
     }
 
-    /* ── Fullscreen ── */
-    body:fullscreen .controls, body:fullscreen .title-bar { opacity: 0; }
-    body:fullscreen .controls:hover, body:fullscreen .title-bar:hover { opacity: 1; }
+    /* ══════════════════════════════════════════
+       AUTHORING LAYOUT
+       ══════════════════════════════════════════ */
+
+    .authoring {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Filmstrip ── */
+
+    .filmstrip {
+      width: var(--filmstrip-w);
+      background: var(--surface);
+      border-right: 1px solid var(--line);
+      overflow-y: auto;
+      flex-shrink: 0;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filmstrip::-webkit-scrollbar { width: 4px; }
+    .filmstrip::-webkit-scrollbar-track { background: transparent; }
+    .filmstrip::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+    .thumb {
+      position: relative;
+      border: 2px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      overflow: hidden;
+      background: white;
+      aspect-ratio: 16/9;
+      transition: border-color 0.15s;
+    }
+
+    .thumb:hover { border-color: rgba(255,255,255,0.3); }
+    .thumb.selected { border-color: var(--accent); }
+
+    .thumb-num {
+      position: absolute;
+      bottom: 2px;
+      right: 4px;
+      font-size: 9px;
+      color: var(--muted);
+      background: rgba(0,0,0,0.6);
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    .thumb-inner {
+      width: 100%;
+      height: 100%;
+      transform-origin: top left;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .thumb-inner section,
+    .thumb-inner svg {
+      width: 960px !important;
+      height: 540px !important;
+    }
+
+    /* ── Main Area ── */
+
+    .main-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Slide Preview ── */
+
+    .preview-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .preview-frame {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      overflow: hidden;
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 16/9;
+      position: relative;
+    }
+
+    .preview-frame section,
+    .preview-frame svg {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ── Editor Panel ── */
+
+    .editor-panel {
+      height: 200px;
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .editor-header {
+      display: flex;
+      align-items: center;
+      padding: 6px 12px;
+      gap: 8px;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .editor-header span { font-weight: 600; }
+
+    .editor-textarea {
+      flex: 1;
+      background: var(--surface2);
+      color: var(--text);
+      border: none;
+      padding: 12px;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      resize: none;
+      outline: none;
+      tab-size: 2;
+    }
+
+    .editor-textarea::placeholder { color: var(--muted); }
+
+    /* ── Resize Handle ── */
+
+    .resize-handle {
+      height: 4px;
+      background: var(--line);
+      cursor: row-resize;
+      flex-shrink: 0;
+    }
+
+    .resize-handle:hover { background: var(--accent); }
+
+    /* ══════════════════════════════════════════
+       PRESENTATION MODE (fullscreen)
+       ══════════════════════════════════════════ */
+
+    .present-mode {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: black;
+    }
+
+    .present-mode.active { display: block; }
+
+    .present-mode #present-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .present-mode #present-container > section,
+    .present-mode #present-container > svg {
+      display: none;
+      position: absolute;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .present-mode #present-container > section.active,
+    .present-mode #present-container > svg.active {
+      display: block;
+    }
+
+    .present-mode #present-container > section.active > svg,
+    .present-mode #present-container > svg.active {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .present-controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1001;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 12px;
+      padding: 60px 20px 12px;
+      background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .present-controls:hover { opacity: 1; }
+
+    .present-progress {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Transitions (presentation mode only) ── */
+
+    @keyframes t-fade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes t-slide-r { from { opacity:0; transform:translateX(80px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes t-slide-l { from { opacity:0; transform:translateX(-80px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes t-scale { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+    @keyframes t-zoom { from { opacity:0; transform:scale(1.3); } to { opacity:1; transform:scale(1); } }
+
+    [data-transition="fade"] > .active { animation: t-fade 0.4s ease-out both; }
+    [data-transition="slide"] > .active { animation: t-slide-r 0.4s var(--spring) both; }
+    [data-transition="slide-back"] > .active { animation: t-slide-l 0.4s var(--spring) both; }
+    [data-transition="scale"] > .active { animation: t-scale 0.4s var(--spring) both; }
+    [data-transition="zoom"] > .active { animation: t-zoom 0.4s var(--spring) both; }
+    [data-transition="none"] > .active { animation: none; }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
@@ -252,102 +343,69 @@
 </head>
 <body>
 
-  <div class="title-bar">
+  <!-- ══ Toolbar ══ -->
+  <div class="toolbar">
     <div class="ai-dot"></div>
-    <span id="deck-name">Slides</span>
-  </div>
+    <span class="deck-name" id="deck-name">Slides</span>
 
-  <div id="marp-container"></div>
+    <button class="tb-btn" id="add-btn" title="Add slide">+ Add</button>
+    <button class="tb-btn" id="dup-btn" title="Duplicate slide">Duplicate</button>
+    <button class="tb-btn" id="del-btn" title="Delete slide">Delete</button>
 
-  <div class="controls">
-    <button class="ctrl-btn" id="prev-btn" disabled>◀</button>
-    <span class="progress" id="progress">0 / 0</span>
-    <button class="ctrl-btn" id="next-btn" disabled>▶</button>
+    <div class="tb-sep"></div>
 
-    <div class="ctrl-divider"></div>
-
-    <select class="ctrl-select" id="transition-select" title="Slide transition">
+    <select class="tb-select" id="transition-select" title="Slide transition">
       <option value="fade">Fade</option>
       <option value="slide">Slide</option>
-      <option value="push">Push Up</option>
       <option value="scale">Scale</option>
-      <option value="flip">Flip</option>
       <option value="zoom">Zoom</option>
-      <option value="drop">Drop</option>
-      <option value="rotate">Rotate</option>
       <option value="none">None</option>
     </select>
 
-    <div class="ctrl-divider"></div>
+    <div class="tb-sep"></div>
 
-    <button class="ctrl-btn" id="fs-btn" title="Fullscreen (F)">⛶</button>
+    <button class="tb-btn primary" id="present-btn">▶ Present</button>
+  </div>
+
+  <!-- ══ Authoring View ══ -->
+  <div class="authoring">
+    <div class="filmstrip" id="filmstrip"></div>
+    <div class="main-area">
+      <div class="preview-container">
+        <div class="preview-frame" id="preview-frame"></div>
+      </div>
+      <div class="resize-handle" id="resize-handle"></div>
+      <div class="editor-panel" id="editor-panel">
+        <div class="editor-header">
+          <span>Slide <span id="editor-slide-num">1</span></span>
+          <span style="margin-left:auto;font-size:11px;color:var(--muted)">Markdown</span>
+        </div>
+        <textarea class="editor-textarea" id="editor" placeholder="Write slide content in Markdown..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Presentation Mode (overlay) ══ -->
+  <div class="present-mode" id="present-mode">
+    <div id="present-container" data-transition="none"></div>
+    <div class="present-controls">
+      <button class="tb-btn" id="present-prev">◀</button>
+      <span class="present-progress" id="present-progress">1 / 1</span>
+      <button class="tb-btn" id="present-next">▶</button>
+      <div class="tb-sep"></div>
+      <button class="tb-btn" id="present-exit">✕ Exit</button>
+    </div>
   </div>
 
   <script>
     const slidesApp = window["slides"];
+    let slides = [];        // Array of { html, markdown, transition }
     let currentIdx = 0;
-    let totalSlides = 0;
-    let prevIdx = -1;
+    let marpCSS = "";
+    let editorDirty = false;
+    let saveTimeout = null;
 
-    // Per-slide transition map: slideIndex → transitionName
-    // Stored in markdown via HTML comments: <!-- transition: flip -->
-    const slideTransitions = {};
-    let globalTransition = "fade";
-
-    // ── Core ──
-
-    function getTransitionForSlide(idx) {
-      return slideTransitions[idx] || globalTransition;
-    }
-
-    let firstRender = true;
-
-    function updateSlide() {
-      const container = document.getElementById("marp-container");
-      const children = container.querySelectorAll(":scope > section, :scope > svg");
-
-      // No transition on first render — show immediately without flicker
-      if (firstRender) {
-        firstRender = false;
-        container.setAttribute("data-transition", "none");
-        children.forEach((s, i) => {
-          s.classList.toggle("active", i === currentIdx);
-        });
-        prevIdx = currentIdx;
-        document.getElementById("progress").textContent = `${currentIdx + 1} / ${children.length}`;
-        document.getElementById("prev-btn").disabled = currentIdx === 0;
-        document.getElementById("next-btn").disabled = currentIdx >= children.length - 1;
-        document.getElementById("transition-select").value = getTransitionForSlide(currentIdx);
-        return;
-      }
-
-      // Determine transition for slide changes
-      let transition = "fade";
-      if (prevIdx >= 0 && prevIdx !== currentIdx) {
-        transition = getTransitionForSlide(currentIdx);
-        if (transition === "slide" && currentIdx < prevIdx) {
-          transition = "slide-back";
-        }
-      }
-
-      // Set transition BEFORE activating the slide to avoid opacity:0 flash
-      container.setAttribute("data-transition", transition);
-      // Force animation restart by briefly removing active, then re-adding
-      const prevActive = container.querySelector(".active");
-      if (prevActive) prevActive.classList.remove("active");
-      void container.offsetHeight;
-      children.forEach((s, i) => {
-        s.classList.toggle("active", i === currentIdx);
-      });
-
-      prevIdx = currentIdx;
-      document.getElementById("progress").textContent = `${currentIdx + 1} / ${totalSlides}`;
-      document.getElementById("prev-btn").disabled = currentIdx === 0;
-      document.getElementById("next-btn").disabled = currentIdx >= totalSlides - 1;
-
-      // Update transition dropdown to show current slide's transition
-      document.getElementById("transition-select").value = getTransitionForSlide(currentIdx);
-    }
+    // ── Parse MCP response ──
 
     function parseMCP(raw) {
       if (raw && raw.content && Array.isArray(raw.content)) {
@@ -359,104 +417,288 @@
       return raw;
     }
 
-    function parseSlideTransitions() {
-      // Extract <!-- transition: xxx --> from each slide's HTML
-      const container = document.getElementById("marp-container");
-      const children = container.querySelectorAll(":scope > section, :scope > svg");
-      children.forEach((section, i) => {
-        const html = section.innerHTML;
-        const match = html.match(/<!--\s*transition:\s*(\w+)\s*-->/);
-        if (match) {
-          slideTransitions[i] = match[1];
-        }
-      });
-    }
-
-    function handleRender(data) {
-      const container = document.getElementById("marp-container");
-      container.innerHTML = data.html || "";
-      document.getElementById("marp-style").innerHTML = data.css || "";
-
-      // Count slides (sections or top-level SVGs)
-      const children = container.querySelectorAll(":scope > section, :scope > svg");
-      totalSlides = children.length;
-      currentIdx = data.current || 0;
-      prevIdx = -1;
-
-      // Parse per-slide transitions from HTML comments
-      parseSlideTransitions();
-
-      updateSlide();
-    }
+    // ── Render from server data ──
 
     function handleData(data) {
       if (!data) return;
       if (data.type === "render" || (data.html && data.css)) {
-        handleRender(data);
+        loadDeck(data);
       } else if (data.type === "nav" || typeof data.index === "number") {
-        const oldIdx = currentIdx;
-        currentIdx = data.index;
-        prevIdx = oldIdx;
-        updateSlide();
+        selectSlide(data.index);
       }
     }
 
-    // ── Controls ──
+    function loadDeck(data) {
+      marpCSS = data.css || "";
+      document.getElementById("marp-style").innerHTML = marpCSS;
 
-    document.getElementById("prev-btn").addEventListener("click", async () => {
+      // Parse HTML into individual slides
+      const tmp = document.createElement("div");
+      tmp.innerHTML = data.html || "";
+      const sections = tmp.querySelectorAll(":scope > section, :scope > svg");
+
+      slides = [];
+      sections.forEach((el, i) => {
+        const transMatch = el.innerHTML.match(/<!--\s*transition:\s*(\w+)\s*-->/);
+        slides.push({
+          html: el.outerHTML,
+          markdown: data.slideMarkdowns?.[i] || "",
+          transition: transMatch ? transMatch[1] : "fade",
+        });
+      });
+
+      currentIdx = Math.min(data.current || 0, slides.length - 1);
+      renderFilmstrip();
+      selectSlide(currentIdx);
+    }
+
+    // ── Filmstrip ──
+
+    function renderFilmstrip() {
+      const strip = document.getElementById("filmstrip");
+      strip.innerHTML = "";
+
+      slides.forEach((slide, i) => {
+        const thumb = document.createElement("div");
+        thumb.className = "thumb" + (i === currentIdx ? " selected" : "");
+        thumb.onclick = () => selectSlide(i);
+
+        const inner = document.createElement("div");
+        inner.className = "thumb-inner";
+        inner.innerHTML = slide.html;
+        // Scale to fit thumbnail
+        const scale = (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--filmstrip-w')) || 180 - 20) / 960;
+        inner.style.transform = `scale(${(180 - 20) / 960})`;
+
+        const num = document.createElement("div");
+        num.className = "thumb-num";
+        num.textContent = i + 1;
+
+        thumb.appendChild(inner);
+        thumb.appendChild(num);
+        strip.appendChild(thumb);
+      });
+    }
+
+    // ── Slide Selection ──
+
+    function selectSlide(idx) {
+      // Save current editor content if dirty
+      if (editorDirty && slides[currentIdx]) {
+        saveCurrentSlide();
+      }
+
+      currentIdx = Math.max(0, Math.min(idx, slides.length - 1));
+
+      // Update filmstrip selection
+      document.querySelectorAll(".thumb").forEach((t, i) => {
+        t.classList.toggle("selected", i === currentIdx);
+      });
+
+      // Scroll selected thumb into view
+      const selected = document.querySelector(".thumb.selected");
+      if (selected) selected.scrollIntoView({ block: "nearest" });
+
+      // Update preview
+      const preview = document.getElementById("preview-frame");
+      if (slides[currentIdx]) {
+        preview.innerHTML = slides[currentIdx].html;
+      }
+
+      // Update editor
+      const editor = document.getElementById("editor");
+      editor.value = slides[currentIdx]?.markdown || "";
+      editorDirty = false;
+      document.getElementById("editor-slide-num").textContent = currentIdx + 1;
+
+      // Update transition dropdown
+      document.getElementById("transition-select").value = slides[currentIdx]?.transition || "fade";
+    }
+
+    // ── Editor ──
+
+    function saveCurrentSlide() {
+      if (!slides[currentIdx]) return;
+      const editor = document.getElementById("editor");
+      const newMarkdown = editor.value;
+      if (newMarkdown === slides[currentIdx].markdown) return;
+
+      slides[currentIdx].markdown = newMarkdown;
+      editorDirty = false;
+
+      // Send to server
       if (slidesApp) {
-        handleData(parseMCP(await slidesApp.previous()));
-      } else if (currentIdx > 0) {
-        prevIdx = currentIdx;
-        currentIdx--;
-        updateSlide();
+        slidesApp.edit({ index: currentIdx, markdown: newMarkdown }).then(r => {
+          const data = parseMCP(r);
+          if (data && data.html) {
+            // Refresh just this slide's HTML
+            const tmp = document.createElement("div");
+            tmp.innerHTML = data.html || "";
+            const sections = tmp.querySelectorAll(":scope > section, :scope > svg");
+            if (sections[currentIdx]) {
+              slides[currentIdx].html = sections[currentIdx].outerHTML;
+              document.getElementById("preview-frame").innerHTML = slides[currentIdx].html;
+              renderFilmstrip();
+            }
+          }
+        });
+      }
+    }
+
+    document.getElementById("editor").addEventListener("input", () => {
+      editorDirty = true;
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(saveCurrentSlide, 800);
+    });
+
+    // ── Toolbar Actions ──
+
+    document.getElementById("add-btn").addEventListener("click", async () => {
+      if (slidesApp) {
+        const r = parseMCP(await slidesApp.add({ content: "# New Slide\n\nContent here", index: currentIdx + 1 }));
+        if (r && r.html) loadDeck(r);
+        selectSlide(currentIdx + 1);
       }
     });
 
-    document.getElementById("next-btn").addEventListener("click", async () => {
+    document.getElementById("dup-btn").addEventListener("click", async () => {
       if (slidesApp) {
-        handleData(parseMCP(await slidesApp.next()));
-      } else if (currentIdx < totalSlides - 1) {
-        prevIdx = currentIdx;
-        currentIdx++;
-        updateSlide();
+        const r = parseMCP(await slidesApp.duplicate({ index: currentIdx }));
+        if (r && r.html) loadDeck(r);
+        selectSlide(currentIdx + 1);
+      }
+    });
+
+    document.getElementById("del-btn").addEventListener("click", async () => {
+      if (slides.length <= 1) return;
+      if (slidesApp) {
+        const r = parseMCP(await slidesApp.remove({ index: currentIdx }));
+        if (r && r.html) loadDeck(r);
+        selectSlide(Math.min(currentIdx, slides.length - 1));
       }
     });
 
     document.getElementById("transition-select").addEventListener("change", (e) => {
-      const value = e.target.value;
-      // Set transition for current slide
-      slideTransitions[currentIdx] = value;
-      globalTransition = value;
-    });
-
-    document.getElementById("fs-btn").addEventListener("click", () => {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        document.body.requestFullscreen();
+      if (slides[currentIdx]) {
+        slides[currentIdx].transition = e.target.value;
       }
     });
+
+    // ── Presentation Mode ──
+
+    let presentIdx = 0;
+
+    document.getElementById("present-btn").addEventListener("click", () => {
+      enterPresentation();
+    });
+
+    document.getElementById("present-exit").addEventListener("click", () => {
+      exitPresentation();
+    });
+
+    function enterPresentation() {
+      const mode = document.getElementById("present-mode");
+      const container = document.getElementById("present-container");
+      container.innerHTML = slides.map(s => s.html).join("");
+      container.setAttribute("data-transition", "none");
+
+      presentIdx = currentIdx;
+      const children = container.querySelectorAll(":scope > section, :scope > svg");
+      children.forEach((s, i) => s.classList.toggle("active", i === presentIdx));
+
+      document.getElementById("present-progress").textContent = `${presentIdx + 1} / ${slides.length}`;
+      mode.classList.add("active");
+
+      // Try fullscreen
+      document.body.requestFullscreen?.().catch(() => {});
+    }
+
+    function exitPresentation() {
+      document.getElementById("present-mode").classList.remove("active");
+      if (document.fullscreenElement) document.exitFullscreen();
+      selectSlide(presentIdx);
+    }
+
+    function presentNav(dir) {
+      const container = document.getElementById("present-container");
+      const children = container.querySelectorAll(":scope > section, :scope > svg");
+      const newIdx = presentIdx + dir;
+      if (newIdx < 0 || newIdx >= children.length) return;
+
+      const transition = slides[newIdx]?.transition || "fade";
+      container.setAttribute("data-transition", dir > 0 ? transition : (transition === "slide" ? "slide-back" : transition));
+      const prev = container.querySelector(".active");
+      if (prev) prev.classList.remove("active");
+      void container.offsetHeight;
+      presentIdx = newIdx;
+      children[presentIdx].classList.add("active");
+      document.getElementById("present-progress").textContent = `${presentIdx + 1} / ${slides.length}`;
+    }
+
+    document.getElementById("present-prev").addEventListener("click", () => presentNav(-1));
+    document.getElementById("present-next").addEventListener("click", () => presentNav(1));
+
+    // ── Editor Resize ──
+
+    const resizeHandle = document.getElementById("resize-handle");
+    let resizing = false;
+
+    resizeHandle.addEventListener("mousedown", (e) => {
+      resizing = true;
+      e.preventDefault();
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!resizing) return;
+      const panel = document.getElementById("editor-panel");
+      const rect = document.querySelector(".authoring").getBoundingClientRect();
+      const newHeight = rect.bottom - e.clientY;
+      panel.style.height = Math.max(80, Math.min(newHeight, rect.height - 100)) + "px";
+    });
+
+    window.addEventListener("mouseup", () => { resizing = false; });
 
     // ── Keyboard ──
 
     window.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+      const presenting = document.getElementById("present-mode").classList.contains("active");
+      const inEditor = document.activeElement === document.getElementById("editor");
+
+      if (presenting) {
+        if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+          e.preventDefault(); presentNav(1);
+        } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+          e.preventDefault(); presentNav(-1);
+        } else if (e.key === "Escape") {
+          exitPresentation();
+        }
+        return;
+      }
+
+      // Authoring shortcuts (not when typing in editor)
+      if (!inEditor) {
+        if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+          e.preventDefault();
+          selectSlide(currentIdx + 1);
+        } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+          e.preventDefault();
+          selectSlide(currentIdx - 1);
+        } else if (e.key === "Enter" || e.key === "p") {
+          enterPresentation();
+        }
+      }
+
+      // Cmd+S to save
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
         e.preventDefault();
-        document.getElementById("next-btn").click();
+        saveCurrentSlide();
       }
-      if (e.key === "ArrowLeft" || e.key === "PageUp") {
-        e.preventDefault();
-        document.getElementById("prev-btn").click();
-      }
-      if (e.key === "f" || e.key === "F") {
-        document.getElementById("fs-btn").click();
-      }
-      if (e.key === "Home") {
-        if (slidesApp) slidesApp.go({ index: 0 }).then(r => handleData(parseMCP(r)));
-      }
-      if (e.key === "End") {
-        if (slidesApp) slidesApp.go({ index: totalSlides - 1 }).then(r => handleData(parseMCP(r)));
+    });
+
+    // ── Fullscreen exit → back to authoring ──
+    document.addEventListener("fullscreenchange", () => {
+      if (!document.fullscreenElement && document.getElementById("present-mode").classList.contains("active")) {
+        exitPresentation();
       }
     });
 
