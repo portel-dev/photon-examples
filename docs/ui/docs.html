@@ -26,25 +26,26 @@
       font-family: system-ui, -apple-system, sans-serif;
       height: 100vh;
       display: grid;
-      grid-template-columns: 240px 1fr;
+      grid-template-columns: 220px 1fr;
       grid-template-rows: auto 1fr;
       overflow: hidden;
     }
 
-    /* ── Top Bar ── */
+    /* ── Toolbar ── */
 
-    .topbar {
+    .toolbar {
       grid-column: 1 / -1;
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 20px;
+      gap: 10px;
+      padding: 8px 16px;
       border-bottom: 1px solid var(--line);
       background: var(--surface);
       font-size: 13px;
+      z-index: 100;
     }
 
-    .topbar .title {
+    .toolbar .title {
       font-weight: 600;
       flex: 1;
       white-space: nowrap;
@@ -52,13 +53,21 @@
       text-overflow: ellipsis;
     }
 
-    .topbar .stats {
+    .toolbar .stats {
       color: var(--muted);
       font-size: 12px;
       white-space: nowrap;
     }
 
-    .topbar button {
+    .toolbar .save-indicator {
+      font-size: 11px;
+      color: var(--muted);
+      transition: opacity 0.3s;
+    }
+    .toolbar .save-indicator.saving { color: var(--accent); }
+    .toolbar .save-indicator.saved { color: #4ade80; }
+
+    .tb-btn {
       background: rgba(255,255,255,0.06);
       border: 1px solid var(--line);
       color: var(--text);
@@ -67,21 +76,25 @@
       cursor: pointer;
       font-size: 12px;
       transition: background 0.15s;
+      white-space: nowrap;
     }
 
-    .topbar button:hover { background: rgba(255,255,255,0.12); }
-    .topbar button.primary { background: rgba(103,199,255,0.15); border-color: rgba(103,199,255,0.3); }
+    .tb-btn:hover { background: rgba(255,255,255,0.12); }
+    .tb-btn.primary { background: rgba(103,199,255,0.15); border-color: rgba(103,199,255,0.3); color: var(--accent); }
+    .tb-btn.primary:hover { background: rgba(103,199,255,0.25); }
 
-    /* ── Sidebar (Outline) ── */
+    .tb-sep { width: 1px; height: 20px; background: var(--line); flex-shrink: 0; }
+
+    /* ── Sidebar ── */
 
     .sidebar {
       background: var(--surface);
       border-right: 1px solid var(--line);
-      padding: 16px;
+      padding: 16px 12px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
     }
 
     .sidebar-label {
@@ -90,6 +103,7 @@
       letter-spacing: 0.12em;
       color: var(--muted);
       margin-bottom: 4px;
+      padding: 0 6px;
     }
 
     .outline-item {
@@ -99,8 +113,8 @@
       background: none;
       border: none;
       color: var(--text);
-      padding: 6px 8px;
-      border-radius: 6px;
+      padding: 5px 8px;
+      border-radius: 5px;
       cursor: pointer;
       font-size: 13px;
       transition: background 0.15s;
@@ -110,14 +124,15 @@
     }
 
     .outline-item:hover { background: rgba(255,255,255,0.06); }
+    .outline-item.active { background: rgba(103,199,255,0.12); color: var(--accent); }
     .outline-item.h2 { padding-left: 20px; font-size: 12px; }
-    .outline-item.h3 { padding-left: 36px; font-size: 11px; color: var(--muted); }
+    .outline-item.h3 { padding-left: 34px; font-size: 11px; color: var(--muted); }
 
     .doc-list {
-      margin-top: 12px;
+      margin-top: 8px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
 
     .doc-item {
@@ -127,63 +142,21 @@
       background: none;
       border: none;
       color: var(--muted);
-      padding: 6px 8px;
-      border-radius: 6px;
+      padding: 5px 8px;
+      border-radius: 5px;
       cursor: pointer;
       font-size: 12px;
-      transition: background 0.15s;
+      transition: all 0.15s;
     }
 
     .doc-item:hover { background: rgba(255,255,255,0.06); color: var(--text); }
     .doc-item.active { background: rgba(103,199,255,0.1); color: var(--accent); }
 
-    /* ── Main Editor Area ── */
+    /* ── Main Preview Area ── */
 
-    .editor-area {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
-      overflow: hidden;
-    }
-
-    .editor-pane {
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid var(--line);
-      overflow: hidden;
-    }
-
-    .pane-header {
-      padding: 8px 16px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      border-bottom: 1px solid var(--line);
-      background: rgba(255,255,255,0.02);
-      flex-shrink: 0;
-    }
-
-    textarea {
-      flex: 1;
-      width: 100%;
-      border: none;
-      outline: none;
-      resize: none;
-      background: rgba(6, 10, 20, 0.9);
-      color: var(--text);
-      padding: 20px 24px;
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 13px;
-      line-height: 1.7;
-      tab-size: 2;
-    }
-
-    /* ── Preview Pane ── */
-
-    .preview-pane {
+    .preview-area {
       overflow-y: auto;
-      background: #1a1e2e;
+      background: #141828;
       padding: 32px;
       display: flex;
       flex-direction: column;
@@ -194,22 +167,24 @@
     .page {
       width: 210mm;
       max-width: 100%;
-      min-height: 297mm;
+      min-height: 200px;
       background: var(--page-bg);
       color: var(--page-text);
       box-shadow: var(--page-shadow);
       border-radius: 4px;
-      padding: 60px 50px;
+      padding: 60px 56px;
       font-family: 'Inter', 'Georgia', serif;
       font-size: 11pt;
       line-height: 1.7;
-      animation: page-fade-in 0.3s ease-out both;
+      animation: page-in 0.25s ease-out both;
     }
 
-    @keyframes page-fade-in {
-      from { opacity: 0; transform: translateY(8px); }
+    @keyframes page-in {
+      from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* ── Page Typography ── */
 
     .page h1 { font-size: 2em; margin: 0 0 0.5em; color: #111; font-weight: 700; }
     .page h2 { font-size: 1.5em; margin: 1.2em 0 0.4em; color: #222; font-weight: 600; border-bottom: 1px solid #e5e5e5; padding-bottom: 0.3em; }
@@ -227,17 +202,13 @@
     .page th { background: #f8f8f8; font-weight: 600; }
     .page hr { border: none; border-top: 1px solid #e5e5e5; margin: 2em 0; }
 
-    /* Callout containers */
     .page .callout { padding: 16px 20px; border-radius: 6px; margin: 1em 0; border-left: 4px solid; }
     .page .callout-note { background: #eff6ff; border-color: #3b82f6; }
     .page .callout-warning { background: #fffbeb; border-color: #f59e0b; }
     .page .callout-tip { background: #f0fdf4; border-color: #22c55e; }
     .page .callout-title { font-weight: 600; margin-bottom: 4px; }
-
-    /* Footnotes */
     .page .footnote { font-size: 0.85em; color: #666; border-top: 1px solid #e5e5e5; padding-top: 8px; margin-top: 2em; }
 
-    /* Page break indicator */
     .page-break-indicator {
       width: 100%;
       text-align: center;
@@ -246,19 +217,198 @@
       padding: 4px 0;
     }
 
-    @media (max-width: 1200px) {
+    /* ── Inline Editing ── */
+
+    .editable-block {
+      position: relative;
+      cursor: text;
+      border-radius: 4px;
+      transition: outline-color 0.15s, background 0.15s;
+      outline: 2px solid transparent;
+      outline-offset: 4px;
+    }
+
+    .editable-block:hover {
+      outline-color: rgba(103, 199, 255, 0.2);
+      background: rgba(103, 199, 255, 0.03);
+    }
+
+    .editable-block.editing {
+      outline-color: rgba(103, 199, 255, 0.5);
+      background: rgba(103, 199, 255, 0.04);
+    }
+
+    .inline-editor {
+      width: 100%;
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--page-text);
+      background: rgba(240, 245, 255, 0.6);
+      padding: 8px 10px;
+      border-radius: 4px;
+      margin: 4px 0;
+      min-height: 2.4em;
+      overflow: hidden;
+    }
+
+    /* ── Source Mode Toggle ── */
+
+    .source-editor {
+      display: none;
+      width: 210mm;
+      max-width: 100%;
+      min-height: 400px;
+      background: rgba(10, 14, 26, 0.95);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 24px;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      resize: vertical;
+      outline: none;
+    }
+
+    .source-editor.visible { display: block; }
+
+    /* ── Doc Picker Overlay ── */
+
+    .picker-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+    }
+
+    .picker-overlay.visible { display: flex; }
+
+    .picker {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      width: 480px;
+      max-height: 70vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: picker-in 0.2s var(--spring) both;
+    }
+
+    @keyframes picker-in {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .picker-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .picker-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .picker-search {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .picker-search:focus { border-color: rgba(103,199,255,0.4); }
+    .picker-search::placeholder { color: var(--muted); }
+
+    .picker-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .picker-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.12s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      color: var(--text);
+    }
+
+    .picker-item:hover { background: rgba(255,255,255,0.06); }
+
+    .picker-item .icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(103,199,255,0.1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .picker-item .info { flex: 1; min-width: 0; }
+    .picker-item .info .name { font-size: 13px; font-weight: 500; }
+    .picker-item .info .meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .picker-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      gap: 8px;
+    }
+
+    .picker-footer input {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .picker-footer input::placeholder { color: var(--muted); }
+
+    @media (max-width: 900px) {
       body { grid-template-columns: 1fr; }
       .sidebar { display: none; }
-      .editor-area { grid-template-columns: 1fr; }
-      .preview-pane { display: none; }
+      .page { padding: 32px 24px; }
     }
   </style>
 </head>
 <body>
-  <div class="topbar">
+  <div class="toolbar">
+    <button class="tb-btn" id="docs-btn">Docs</button>
+    <span class="tb-sep"></span>
     <span class="title" id="doc-title">Untitled Document</span>
+    <span class="save-indicator" id="save-indicator"></span>
     <span class="stats" id="doc-stats"></span>
-    <button class="primary" id="save-btn">Save</button>
+    <span class="tb-sep"></span>
+    <button class="tb-btn" id="source-btn">Source</button>
+    <button class="tb-btn primary" id="save-btn">Save</button>
   </div>
 
   <aside class="sidebar">
@@ -268,17 +418,36 @@
     <div class="doc-list" id="doc-list"></div>
   </aside>
 
-  <div class="editor-area">
-    <div class="editor-pane">
-      <div class="pane-header">Markdown</div>
-      <textarea id="editor" spellcheck="false"></textarea>
+  <div class="preview-area" id="preview-area">
+    <div id="preview"></div>
+    <textarea class="source-editor" id="source-editor" spellcheck="false"></textarea>
+  </div>
+
+  <!-- Document Picker Overlay -->
+  <div class="picker-overlay" id="picker-overlay">
+    <div class="picker">
+      <div class="picker-header">
+        <h2>Open Document</h2>
+        <input class="picker-search" id="picker-search" placeholder="Search documents..." autocomplete="off">
+      </div>
+      <div class="picker-list" id="picker-list"></div>
+      <div class="picker-footer">
+        <input id="new-doc-name" placeholder="New document name...">
+        <button class="tb-btn primary" id="new-doc-btn">Create</button>
+      </div>
     </div>
-    <div class="preview-pane" id="preview"></div>
   </div>
 
   <script>
     const docsApp = window["docs"];
     let state = { markdown: '', frontmatter: {}, outline: [], stats: {} };
+    let currentFile = '';
+    let sourceMode = false;
+    let editingBlock = null;
+    let saveTimeout = null;
+    let docList = [];
+
+    // ── MCP Helpers ──
 
     function parseMCP(raw) {
       if (raw && raw.content && Array.isArray(raw.content)) {
@@ -288,82 +457,391 @@
       return raw;
     }
 
-    function renderPreview(markdown) {
-      const preview = document.getElementById("preview");
-      // Split on page breaks
-      const { body } = splitFrontmatter(markdown);
-      const pages = body.split(/---pagebreak---/);
-
-      preview.innerHTML = pages.map((pageContent, i) => {
-        const html = renderMarkdown(pageContent.trim());
-        return `<div class="page">${html}</div>` +
-          (i < pages.length - 1 ? '<div class="page-break-indicator">--- page break ---</div>' : '');
-      }).join('');
-    }
+    // ── Markdown Parsing ──
 
     function splitFrontmatter(md) {
       const match = md.match(/^---\n[\s\S]*?\n---\n?/);
       return { frontmatter: match ? match[0] : '', body: match ? md.slice(match[0].length) : md };
     }
 
-    function renderMarkdown(text) {
-      // Simple markdown renderer — handles common elements
-      let html = text
-        // Code blocks
-        .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-        // Callout containers
-        .replace(/::: (note|warning|tip)\n([\s\S]*?):::/g, (_, type, content) =>
-          `<div class="callout callout-${type}"><div class="callout-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>${renderInline(content.trim())}</div>`)
-        // Headings
-        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-        // Horizontal rules
-        .replace(/^---$/gm, '<hr>')
-        // Blockquotes
-        .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
-        // Unordered lists
-        .replace(/^- (.+)$/gm, '<li>$1</li>')
-        // Ordered lists
-        .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
-        // Footnotes
-        .replace(/\[\^(\d+)\]:\s*(.+)$/gm, '<div class="footnote"><sup>$1</sup> $2</div>')
-        .replace(/\[\^(\d+)\]/g, '<sup>$1</sup>')
-        // Paragraphs
-        .replace(/\n\n+/g, '</p><p>')
-        // Wrap lists
-        .replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>')
-        // Clean up double-wrapped lists
-        .replace(/<\/ul>\s*<ul>/g, '');
+    /**
+     * Parse body into blocks: each block is { type, raw, level? }
+     * Types: heading, paragraph, code, callout, list, blockquote, hr, pagebreak
+     */
+    function parseBlocks(body) {
+      const lines = body.split('\n');
+      const blocks = [];
+      let i = 0;
 
-      html = renderInline(html);
-      return `<p>${html}</p>`.replace(/<p><\/p>/g, '').replace(/<p>(<h[1-6])/g, '$1').replace(/(<\/h[1-6]>)<\/p>/g, '$1');
+      while (i < lines.length) {
+        const line = lines[i];
+
+        // Empty lines — skip
+        if (line.trim() === '') { i++; continue; }
+
+        // Page break
+        if (line.trim() === '---pagebreak---') {
+          blocks.push({ type: 'pagebreak', raw: line });
+          i++; continue;
+        }
+
+        // HR
+        if (/^---$/.test(line.trim()) && (i === 0 || lines[i-1].trim() === '')) {
+          blocks.push({ type: 'hr', raw: line });
+          i++; continue;
+        }
+
+        // Code block
+        if (line.startsWith('```')) {
+          let raw = line + '\n';
+          i++;
+          while (i < lines.length && !lines[i].startsWith('```')) {
+            raw += lines[i] + '\n';
+            i++;
+          }
+          if (i < lines.length) { raw += lines[i]; i++; }
+          blocks.push({ type: 'code', raw: raw.trimEnd() });
+          continue;
+        }
+
+        // Callout container
+        if (line.startsWith('::: ')) {
+          let raw = line + '\n';
+          i++;
+          while (i < lines.length && lines[i].trim() !== ':::') {
+            raw += lines[i] + '\n';
+            i++;
+          }
+          if (i < lines.length) { raw += lines[i]; i++; }
+          blocks.push({ type: 'callout', raw: raw.trimEnd() });
+          continue;
+        }
+
+        // Heading
+        const hMatch = line.match(/^(#{1,6})\s+(.+)/);
+        if (hMatch) {
+          blocks.push({ type: 'heading', raw: line, level: hMatch[1].length, text: hMatch[2] });
+          i++; continue;
+        }
+
+        // Blockquote (collect consecutive)
+        if (line.startsWith('> ')) {
+          let raw = '';
+          while (i < lines.length && lines[i].startsWith('> ')) {
+            raw += lines[i] + '\n';
+            i++;
+          }
+          blocks.push({ type: 'blockquote', raw: raw.trimEnd() });
+          continue;
+        }
+
+        // List items (collect consecutive - or 1.)
+        if (/^[-*]\s/.test(line) || /^\d+\.\s/.test(line)) {
+          let raw = '';
+          while (i < lines.length && (/^[-*]\s/.test(lines[i]) || /^\d+\.\s/.test(lines[i]) || /^\s+/.test(lines[i]))) {
+            raw += lines[i] + '\n';
+            i++;
+          }
+          blocks.push({ type: 'list', raw: raw.trimEnd() });
+          continue;
+        }
+
+        // Paragraph (collect until blank line or structural element)
+        {
+          let raw = '';
+          while (i < lines.length && lines[i].trim() !== '' &&
+            !lines[i].startsWith('#') && !lines[i].startsWith('```') &&
+            !lines[i].startsWith('::: ') && !lines[i].startsWith('> ') &&
+            !/^[-*]\s/.test(lines[i]) && !/^\d+\.\s/.test(lines[i]) &&
+            lines[i].trim() !== '---pagebreak---' && !/^---$/.test(lines[i].trim())) {
+            raw += lines[i] + '\n';
+            i++;
+          }
+          if (raw.trim()) blocks.push({ type: 'paragraph', raw: raw.trimEnd() });
+        }
+      }
+      return blocks;
     }
+
+    // ── Markdown → HTML Renderers ──
 
     function renderInline(text) {
       return text
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
         .replace(/`(.+?)`/g, '<code>$1</code>')
-        .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
+        .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
+        .replace(/\[\^(\d+)\]/g, '<sup>$1</sup>');
+    }
+
+    function blockToHTML(block) {
+      switch (block.type) {
+        case 'heading':
+          return `<h${block.level}>${renderInline(block.text)}</h${block.level}>`;
+        case 'paragraph':
+          return `<p>${renderInline(block.raw)}</p>`;
+        case 'code': {
+          const m = block.raw.match(/^```(\w*)\n([\s\S]*?)```?$/);
+          const code = m ? m[2] : block.raw;
+          return `<pre><code>${escapeHTML(code)}</code></pre>`;
+        }
+        case 'callout': {
+          const m = block.raw.match(/^::: (\w+)\n([\s\S]*?):::?$/);
+          if (m) {
+            const type = m[1];
+            return `<div class="callout callout-${type}"><div class="callout-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div><p>${renderInline(m[2].trim())}</p></div>`;
+          }
+          return `<p>${renderInline(block.raw)}</p>`;
+        }
+        case 'blockquote': {
+          const content = block.raw.split('\n').map(l => l.replace(/^>\s?/, '')).join('<br>');
+          return `<blockquote>${renderInline(content)}</blockquote>`;
+        }
+        case 'list': {
+          const items = block.raw.split('\n').filter(l => l.trim());
+          const ordered = /^\d+\./.test(items[0]);
+          const tag = ordered ? 'ol' : 'ul';
+          const lis = items.map(l => `<li>${renderInline(l.replace(/^[-*]\s|^\d+\.\s/, ''))}</li>`).join('');
+          return `<${tag}>${lis}</${tag}>`;
+        }
+        case 'hr': return '<hr>';
+        case 'pagebreak': return '';
+        default: return `<p>${renderInline(block.raw)}</p>`;
+      }
+    }
+
+    function escapeHTML(text) {
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // ── Render Preview with Editable Blocks ──
+
+    function renderPreview(markdown) {
+      const preview = document.getElementById("preview");
+      const { body } = splitFrontmatter(markdown);
+      const pages = body.split(/---pagebreak---/);
+
+      let blockIndex = 0;
+      const allBlocks = parseBlocks(body);
+
+      preview.innerHTML = pages.map((pageContent, pageIdx) => {
+        const blocks = parseBlocks(pageContent.trim());
+        const pageHTML = blocks.map(block => {
+          const html = blockToHTML(block);
+          const idx = blockIndex++;
+          if (block.type === 'pagebreak') return '';
+          return `<div class="editable-block" data-block="${idx}" data-type="${block.type}" title="Click to edit">${html}</div>`;
+        }).join('');
+        return `<div class="page">${pageHTML}</div>` +
+          (pageIdx < pages.length - 1 ? '<div class="page-break-indicator">--- page break ---</div>' : '');
+      }).join('');
+
+      // Store blocks for editing
+      preview._blocks = allBlocks;
+
+      // Attach click handlers
+      preview.querySelectorAll('.editable-block').forEach(el => {
+        el.addEventListener('click', () => startInlineEdit(el));
+      });
+    }
+
+    // ── Inline Editing ──
+
+    function startInlineEdit(el) {
+      if (sourceMode) return;
+      if (editingBlock === el) return;
+
+      // Close any existing edit
+      finishInlineEdit();
+
+      const preview = document.getElementById("preview");
+      const idx = parseInt(el.dataset.block);
+      const block = preview._blocks[idx];
+      if (!block) return;
+
+      editingBlock = el;
+      el.classList.add('editing');
+
+      const textarea = document.createElement('textarea');
+      textarea.className = 'inline-editor';
+      textarea.value = block.raw;
+
+      // Auto-size
+      function autoSize() {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+      }
+
+      textarea.addEventListener('input', () => {
+        autoSize();
+        // Update block raw and schedule save
+        block.raw = textarea.value;
+        // Update heading text if heading
+        if (block.type === 'heading') {
+          const m = textarea.value.match(/^(#{1,6})\s+(.+)/);
+          if (m) { block.level = m[1].length; block.text = m[2]; }
+        }
+        scheduleAutoSave();
+      });
+
+      textarea.addEventListener('keydown', (e) => {
+        // Escape to cancel
+        if (e.key === 'Escape') {
+          finishInlineEdit();
+          e.preventDefault();
+        }
+        // Ctrl/Cmd+Enter to finish
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+          finishInlineEdit();
+          e.preventDefault();
+        }
+      });
+
+      // Replace content with textarea
+      el._originalHTML = el.innerHTML;
+      el.innerHTML = '';
+      el.appendChild(textarea);
+      textarea.focus();
+      autoSize();
+    }
+
+    function finishInlineEdit() {
+      if (!editingBlock) return;
+      const el = editingBlock;
+      const preview = document.getElementById("preview");
+      const idx = parseInt(el.dataset.block);
+      const block = preview._blocks[idx];
+      editingBlock = null;
+
+      el.classList.remove('editing');
+
+      if (block) {
+        // Re-render this block
+        el.innerHTML = blockToHTML(block);
+      } else if (el._originalHTML) {
+        el.innerHTML = el._originalHTML;
+      }
+
+      // Re-attach click handler
+      el.addEventListener('click', () => startInlineEdit(el));
+    }
+
+    function rebuildMarkdown() {
+      const preview = document.getElementById("preview");
+      const blocks = preview._blocks;
+      if (!blocks) return state.markdown;
+
+      const { frontmatter } = splitFrontmatter(state.markdown);
+      const body = blocks.map(b => b.raw).join('\n\n');
+      return frontmatter + body + '\n';
+    }
+
+    // ── Auto-Save ──
+
+    function scheduleAutoSave() {
+      const indicator = document.getElementById("save-indicator");
+      indicator.textContent = 'Unsaved changes';
+      indicator.className = 'save-indicator';
+
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(async () => {
+        const markdown = sourceMode
+          ? document.getElementById("source-editor").value
+          : rebuildMarkdown();
+        await doSave(markdown);
+      }, 1500);
+    }
+
+    async function doSave(markdown) {
+      if (!docsApp) return;
+      const indicator = document.getElementById("save-indicator");
+      indicator.textContent = 'Saving...';
+      indicator.className = 'save-indicator saving';
+
+      try {
+        const result = parseMCP(await docsApp.save({ markdown }));
+        if (result && !result.error) {
+          state = result;
+          updateTitle(result);
+          updateStats(result);
+          renderOutline(result.outline);
+          indicator.textContent = 'Saved';
+          indicator.className = 'save-indicator saved';
+          setTimeout(() => { indicator.textContent = ''; }, 2000);
+        }
+      } catch (e) {
+        indicator.textContent = 'Save failed';
+        indicator.className = 'save-indicator';
+      }
+    }
+
+    // ── Source Mode ──
+
+    function toggleSourceMode() {
+      sourceMode = !sourceMode;
+      const srcEditor = document.getElementById("source-editor");
+      const preview = document.getElementById("preview");
+      const btn = document.getElementById("source-btn");
+
+      finishInlineEdit();
+
+      if (sourceMode) {
+        srcEditor.value = state.markdown;
+        srcEditor.classList.add('visible');
+        preview.style.display = 'none';
+        btn.textContent = 'Preview';
+        btn.classList.add('primary');
+      } else {
+        // Apply source changes
+        const newMd = srcEditor.value;
+        if (newMd !== state.markdown) {
+          state.markdown = newMd;
+          renderPreview(newMd);
+          scheduleAutoSave();
+        }
+        srcEditor.classList.remove('visible');
+        preview.style.display = '';
+        btn.textContent = 'Source';
+        btn.classList.remove('primary');
+      }
+    }
+
+    // ── UI Updates ──
+
+    function updateTitle(data) {
+      const fm = data.frontmatter || {};
+      document.getElementById("doc-title").textContent = fm.title || data.file || 'Untitled';
+    }
+
+    function updateStats(data) {
+      const s = data.stats || {};
+      document.getElementById("doc-stats").textContent =
+        `${s.words || 0} words · ${s.readingTime || 1} min · ${s.headings || 0} sections`;
     }
 
     function renderOutline(outline) {
       const el = document.getElementById("outline");
-      if (!outline || !outline.length) { el.innerHTML = '<span style="color:var(--muted);font-size:12px;">No headings</span>'; return; }
+      if (!outline || !outline.length) {
+        el.innerHTML = '<span style="color:var(--muted);font-size:12px;">No headings</span>';
+        return;
+      }
       el.innerHTML = outline.map(h =>
-        `<button class="outline-item h${h.level}" data-line="${h.line}">${h.text}</button>`
+        `<button class="outline-item h${h.level}" data-text="${escapeHTML(h.text)}">${h.text}</button>`
       ).join('');
-      el.querySelectorAll("[data-line]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const editor = document.getElementById("editor");
-          const lines = editor.value.split('\n');
-          let charPos = 0;
-          for (let i = 0; i < parseInt(btn.dataset.line) - 1 && i < lines.length; i++) {
-            charPos += lines[i].length + 1;
+
+      el.querySelectorAll('.outline-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const text = btn.dataset.text;
+          // Find the editable block with this heading
+          const blocks = document.querySelectorAll('.editable-block[data-type="heading"]');
+          for (const block of blocks) {
+            if (block.textContent.trim() === text) {
+              block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              block.style.outline = '2px solid var(--accent)';
+              setTimeout(() => { block.style.outline = ''; }, 1500);
+              break;
+            }
           }
-          editor.focus();
-          editor.setSelectionRange(charPos, charPos);
         });
       });
     }
@@ -371,44 +849,170 @@
     function updateUI(data) {
       if (!data || data.error) return;
       state = data;
-      const fm = data.frontmatter || {};
-      document.getElementById("doc-title").textContent = fm.title || data.file || 'Untitled';
-      document.getElementById("editor").value = data.markdown || '';
-      const s = data.stats || {};
-      document.getElementById("doc-stats").textContent =
-        `${s.words || 0} words · ${s.readingTime || 1} min read · ${s.headings || 0} sections`;
+      currentFile = data.file || '';
+      updateTitle(data);
+      updateStats(data);
       renderOutline(data.outline);
       renderPreview(data.markdown || '');
+      // Highlight active doc in sidebar
+      document.querySelectorAll('.doc-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.file === currentFile);
+      });
+    }
+
+    // ── Document Picker ──
+
+    function showPicker() {
+      const overlay = document.getElementById("picker-overlay");
+      overlay.classList.add('visible');
+      renderPickerList('');
+      document.getElementById("picker-search").value = '';
+      document.getElementById("picker-search").focus();
+    }
+
+    function hidePicker() {
+      document.getElementById("picker-overlay").classList.remove('visible');
+    }
+
+    function renderPickerList(query) {
+      const list = document.getElementById("picker-list");
+      const q = query.toLowerCase();
+      const filtered = docList.filter(d =>
+        !q || d.title.toLowerCase().includes(q) || d.file.toLowerCase().includes(q)
+      );
+
+      list.innerHTML = filtered.map(d => `
+        <button class="picker-item" data-file="${d.file}">
+          <div class="icon">${d.file === currentFile ? '📝' : '📄'}</div>
+          <div class="info">
+            <div class="name">${d.title || d.file}</div>
+            <div class="meta">${d.wordCount} words · ${timeAgo(d.updatedAt)}</div>
+          </div>
+        </button>
+      `).join('') || '<div style="padding:20px;text-align:center;color:var(--muted);">No documents found</div>';
+
+      list.querySelectorAll('.picker-item').forEach(el => {
+        el.addEventListener('click', () => openDoc(el.dataset.file));
+      });
+    }
+
+    function timeAgo(iso) {
+      if (!iso) return '';
+      const diff = Date.now() - new Date(iso).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      const days = Math.floor(hrs / 24);
+      return `${days}d ago`;
+    }
+
+    async function openDoc(file) {
+      hidePicker();
+      if (!docsApp) return;
+      // Switch instance by calling main on the new file via photon bridge
+      // The instance name is embedded in the MCP routing, so we use _use pattern
+      // For now, call read which returns the doc content
+      // Actually the photon instance model means we need to signal a doc switch
+      // We'll use the list approach: load the file's markdown directly
+      // The simplest approach: tell the backend to save current, then re-init
+      if (window.photon?.switchInstance) {
+        await window.photon.switchInstance(file.replace(/\.md$/i, ''));
+        const result = parseMCP(await docsApp.main());
+        updateUI(result);
+      } else {
+        // Fallback: just load via main
+        const result = parseMCP(await docsApp.main());
+        updateUI(result);
+      }
+    }
+
+    async function createDoc(name) {
+      if (!name.trim()) return;
+      hidePicker();
+      const fileName = name.trim().replace(/\.md$/i, '') + '.md';
+      if (window.photon?.switchInstance) {
+        await window.photon.switchInstance(name.trim().replace(/\.md$/i, ''));
+        const result = parseMCP(await docsApp.main());
+        updateUI(result);
+        await loadDocList();
+      }
+    }
+
+    async function loadDocList() {
+      if (!docsApp) return;
+      try {
+        const data = parseMCP(await docsApp.list());
+        if (data && data.docs) {
+          docList = data.docs;
+          // Update sidebar
+          const list = document.getElementById("doc-list");
+          list.innerHTML = data.docs.map(d =>
+            `<button class="doc-item${d.file === currentFile ? ' active' : ''}" data-file="${d.file}">${d.title || d.file}</button>`
+          ).join('');
+          list.querySelectorAll('.doc-item').forEach(el => {
+            el.addEventListener('click', () => openDoc(el.dataset.file));
+          });
+        }
+      } catch (e) { /* ignore */ }
     }
 
     // ── Event Handlers ──
 
     document.getElementById("save-btn").addEventListener("click", async () => {
-      const markdown = document.getElementById("editor").value;
-      if (docsApp) {
-        const result = parseMCP(await docsApp.save({ markdown }));
-        updateUI(result);
-      }
+      finishInlineEdit();
+      const markdown = sourceMode
+        ? document.getElementById("source-editor").value
+        : rebuildMarkdown();
+      await doSave(markdown);
     });
 
-    // Live preview on typing (debounced)
-    let previewTimeout;
-    document.getElementById("editor").addEventListener("input", () => {
-      clearTimeout(previewTimeout);
-      previewTimeout = setTimeout(() => {
-        renderPreview(document.getElementById("editor").value);
-      }, 300);
+    document.getElementById("source-btn").addEventListener("click", toggleSourceMode);
+    document.getElementById("docs-btn").addEventListener("click", showPicker);
+
+    // Source editor auto-save
+    document.getElementById("source-editor").addEventListener("input", () => {
+      scheduleAutoSave();
     });
 
-    // Keyboard shortcut: Cmd/Ctrl+S to save
+    // Keyboard shortcuts
     document.addEventListener("keydown", (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "s") {
         e.preventDefault();
         document.getElementById("save-btn").click();
       }
+      if (e.key === 'Escape' && document.getElementById("picker-overlay").classList.contains('visible')) {
+        hidePicker();
+      }
     });
 
-    // ── Bridge ──
+    // Click outside editable block to finish editing
+    document.getElementById("preview-area").addEventListener("click", (e) => {
+      if (editingBlock && !editingBlock.contains(e.target)) {
+        finishInlineEdit();
+      }
+    });
+
+    // Picker search
+    document.getElementById("picker-search").addEventListener("input", (e) => {
+      renderPickerList(e.target.value);
+    });
+
+    // Picker overlay click to close
+    document.getElementById("picker-overlay").addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) hidePicker();
+    });
+
+    // New doc
+    document.getElementById("new-doc-btn").addEventListener("click", () => {
+      createDoc(document.getElementById("new-doc-name").value);
+    });
+    document.getElementById("new-doc-name").addEventListener("keydown", (e) => {
+      if (e.key === 'Enter') createDoc(e.target.value);
+    });
+
+    // ── Bridge & Init ──
 
     if (docsApp) {
       window.photon?.onResult?.((result) => {
@@ -422,19 +1026,11 @@
         }
       });
 
-      // Load doc list
-      docsApp.list().then(r => {
-        const data = parseMCP(r);
-        if (data && data.docs) {
-          const list = document.getElementById("doc-list");
-          list.innerHTML = data.docs.map(d =>
-            `<button class="doc-item" data-file="${d.file}">${d.title || d.file}</button>`
-          ).join('');
-        }
-      });
-
       // Initial load
-      docsApp.main().then(r => updateUI(parseMCP(r)));
+      docsApp.main().then(r => {
+        updateUI(parseMCP(r));
+        loadDocList();
+      });
     }
   </script>
 </body>
