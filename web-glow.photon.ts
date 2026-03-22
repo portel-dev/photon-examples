@@ -68,8 +68,52 @@ interface RedesignedSite {
 
 interface DeployedSite extends RedesignedSite {
   liveUrl: string;
+  showcaseUrl?: string;
+  beforeScreenshot?: string;
+  afterScreenshot?: string;
   deployedAt: string;
 }
+
+interface ServiceTier {
+  name: string;
+  price: string;
+  features: string[];
+}
+
+const DEFAULT_SERVICES: ServiceTier[] = [
+  {
+    name: 'Design Only',
+    price: '$499',
+    features: [
+      'The redesigned website you see here',
+      'Mobile-responsive layout',
+      'Source HTML files delivered',
+    ],
+  },
+  {
+    name: 'Launch Package',
+    price: '$999',
+    features: [
+      'Everything in Design Only',
+      'Deployed to your domain',
+      'Contact form setup',
+      'Google Maps integration',
+      'Basic SEO optimization',
+    ],
+  },
+  {
+    name: 'Full Service',
+    price: '$1,999',
+    features: [
+      'Everything in Launch Package',
+      'Integrated with your booking system',
+      'Social media links & feeds',
+      'Google Analytics setup',
+      'Monthly maintenance (3 months)',
+      'Content updates on request',
+    ],
+  },
+];
 
 interface PipelineState {
   niche: string;
@@ -79,6 +123,9 @@ interface PipelineState {
   redesigned: RedesignedSite[];
   deployed: DeployedSite[];
   contacted: string[];
+  services: ServiceTier[];
+  paymentLink: string;
+  brandName: string;
   runs: Array<{
     date: string;
     scanned: number;
@@ -95,6 +142,9 @@ export default class WebGlow {
   private state: PipelineState = {
     niche: '', city: '',
     scanned: [], qualified: [], redesigned: [], deployed: [], contacted: [],
+    services: [...DEFAULT_SERVICES],
+    paymentLink: '',
+    brandName: 'WebGlow',
     runs: [],
   };
 
@@ -339,24 +389,36 @@ export default class WebGlow {
     );
     if (!deployed) throw new Error(`No deployed site for ${website}`);
 
+    const showcaseUrl = deployed.showcaseUrl;
+    const mainLink = showcaseUrl || deployed.liveUrl;
+
     return `## Draft Outreach Email
 
 **To:** ${deployed.business.name}
-**Email:** ${deployed.business.email || '(find their email)'}
+**Email:** ${deployed.business.email || '(find their email — run \`discover\`)'}
 **Their site:** ${deployed.business.website}
-**Your demo:** ${deployed.liveUrl}
+**Showcase page:** ${showcaseUrl || '(not yet — run \`showcase\` first)'}
+**Live demo:** ${deployed.liveUrl}
 
 ### Context
 - Business: ${deployed.business.name} (${deployed.business.category || this.state.niche})
 - Location: ${deployed.business.address || this.state.city}
 - Issues found: ${deployed.business.issues.join(', ')}
+- Your brand: ${this.state.brandName}
+
+### What to link
+${showcaseUrl
+  ? `Link to the showcase page (${showcaseUrl}) — it has before/after screenshots, pricing tiers, and a payment button.`
+  : `Link to the live demo (${deployed.liveUrl}). Consider running \`showcase\` first to create a page with before/after comparison, pricing, and payment link.`}
 
 ### Guidelines
-- Lead with the demo link — show, don't tell
+- Subject line: reference their business name + one specific issue
+- Lead with the showcase link — show, don't tell
 - Reference something specific about their business (shows you looked)
 - Keep it under 100 words
-- No hard sell — just "I noticed your website could use a refresh, so I made this demo"
-- Include a clear next step (reply, book a call)
+- No hard sell — "I noticed your website could use a refresh, so I made this preview"
+- Clear next step: "See the redesign and pick a plan that works for you"
+- If no showcase page, just share the demo URL and offer to discuss
 
 Write a short, personalized cold email following these guidelines.`;
   }
@@ -371,6 +433,222 @@ Write a short, personalized cold email following these guidelines.`;
       this.state.contacted.push(website);
     }
     return { marked: website, totalContacted: this.state.contacted.length };
+  }
+
+  // ── Email Discovery ───────────────────────────────────────
+
+  /**
+   * Find email addresses for businesses that don't have one
+   *
+   * Use agent-browser to check the business website's contact page,
+   * footer, about page, and social media links. Updates the business
+   * record with the discovered email.
+   *
+   * @param website Business website URL
+   * @param email Discovered email address
+   */
+  discover({ website, email }: { website: string; email: string }) {
+    const biz = this.state.scanned.find(
+      b => b.website.replace(/\/$/, '') === website.replace(/\/$/, '')
+    );
+    if (biz) biz.email = email;
+
+    const lead = this.state.qualified.find(
+      q => q.website.replace(/\/$/, '') === website.replace(/\/$/, '')
+    );
+    if (lead) lead.email = email;
+
+    const deployed = this.state.deployed.find(
+      d => d.business.website.replace(/\/$/, '') === website.replace(/\/$/, '')
+    );
+    if (deployed) deployed.business.email = email;
+
+    return { website, email, updated: true };
+  }
+
+  /**
+   * List businesses that still need email discovery
+   *
+   * @format table
+   * @readOnly
+   */
+  nomail() {
+    return this.state.qualified
+      .filter(q => q.worthRedesigning && !q.email)
+      .map(q => ({
+        name: q.name,
+        website: q.website,
+        hint: 'Use agent-browser to check contact page, footer, about page, social links',
+      }));
+  }
+
+  // ── Showcase & Pricing ───────────────────────────────────
+
+  /**
+   * Configure your brand name, services, and payment link
+   *
+   * @param brand Your business/brand name {@example WebGlow Studio}
+   * @param payment Payment link URL (Stripe, PayPal, etc.) {@example https://buy.stripe.com/xxx}
+   * @param services Optional custom service tiers
+   */
+  config({ brand, payment, services }: {
+    brand: string;
+    payment: string;
+    services?: ServiceTier[];
+  }) {
+    this.state.brandName = brand;
+    this.state.paymentLink = payment;
+    if (services) this.state.services = services;
+    return {
+      brand: this.state.brandName,
+      paymentLink: this.state.paymentLink,
+      tiers: this.state.services.map(s => `${s.name}: ${s.price}`),
+    };
+  }
+
+  /**
+   * Generate a showcase page for a deployed site
+   *
+   * Creates a self-contained HTML page with:
+   * - Before/after screenshots side by side
+   * - Service tiers with pricing
+   * - Payment/contact link
+   * - Professional branding
+   *
+   * Deploy this page and send the URL in outreach emails.
+   *
+   * @param website Original website URL
+   * @param beforeImg Path or URL of the old website screenshot
+   * @param afterImg Path or URL of the new website screenshot
+   */
+  async showcase({ website, beforeImg, afterImg }: {
+    website: string;
+    beforeImg: string;
+    afterImg: string;
+  }) {
+    const deployed = this.state.deployed.find(
+      d => d.business.website === website
+    );
+    if (!deployed) throw new Error(`No deployed site for ${website}. Deploy first.`);
+
+    deployed.beforeScreenshot = beforeImg;
+    deployed.afterScreenshot = afterImg;
+
+    const biz = deployed.business;
+    const brand = this.state.brandName;
+    const payment = this.state.paymentLink;
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${biz.name} — Website Redesign by ${brand}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a2e; background: #fafafa; }
+  .hero { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: white; padding: 80px 24px; text-align: center; }
+  .hero h1 { font-size: 2.5rem; margin-bottom: 12px; }
+  .hero p { font-size: 1.2rem; opacity: 0.85; max-width: 600px; margin: 0 auto; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  .comparison { padding: 60px 0; }
+  .comparison h2 { text-align: center; font-size: 2rem; margin-bottom: 40px; }
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+  .compare-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  .compare-card img { width: 100%; display: block; }
+  .compare-label { padding: 16px 24px; font-weight: 600; font-size: 1.1rem; }
+  .compare-label.before { color: #e74c3c; }
+  .compare-label.after { color: #27ae60; }
+  .live-link { text-align: center; margin: 24px 0 60px; }
+  .live-link a { color: #302b63; font-weight: 600; text-decoration: none; border-bottom: 2px solid #302b63; padding-bottom: 2px; }
+  .services { background: white; padding: 60px 0; }
+  .services h2 { text-align: center; font-size: 2rem; margin-bottom: 40px; }
+  .tier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+  .tier { border: 2px solid #e8e8e8; border-radius: 16px; padding: 32px; text-align: center; transition: border-color 0.2s, transform 0.2s; }
+  .tier:hover { border-color: #302b63; transform: translateY(-4px); }
+  .tier.featured { border-color: #302b63; background: #f8f7ff; }
+  .tier h3 { font-size: 1.3rem; margin-bottom: 8px; }
+  .tier .price { font-size: 2.2rem; font-weight: 700; color: #302b63; margin-bottom: 16px; }
+  .tier ul { list-style: none; text-align: left; margin-bottom: 24px; }
+  .tier li { padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+  .tier li::before { content: "✓ "; color: #27ae60; font-weight: bold; }
+  .cta-btn { display: inline-block; background: #302b63; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 1.1rem; transition: background 0.2s; }
+  .cta-btn:hover { background: #1a1a2e; }
+  .footer { text-align: center; padding: 40px 24px; color: #888; font-size: 0.9rem; }
+  @media (max-width: 768px) { .compare-grid { grid-template-columns: 1fr; } .hero h1 { font-size: 1.8rem; } }
+</style>
+</head>
+<body>
+  <div class="hero">
+    <h1>Your Website, Reimagined</h1>
+    <p>Hi ${biz.name} — we redesigned your website to show you what's possible. No commitment, just a preview.</p>
+  </div>
+
+  <div class="container">
+    <div class="comparison">
+      <h2>Before & After</h2>
+      <div class="compare-grid">
+        <div class="compare-card">
+          <div class="compare-label before">Current Website</div>
+          <img src="${beforeImg}" alt="Current ${biz.name} website">
+        </div>
+        <div class="compare-card">
+          <div class="compare-label after">Redesigned Version</div>
+          <img src="${afterImg}" alt="Redesigned ${biz.name} website">
+        </div>
+      </div>
+      <div class="live-link">
+        <a href="${deployed.liveUrl}" target="_blank">View the live redesign →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="services">
+    <div class="container">
+      <h2>Make It Yours</h2>
+      <div class="tier-grid">
+        ${this.state.services.map((tier, i) => `
+        <div class="tier${i === 1 ? ' featured' : ''}">
+          <h3>${tier.name}</h3>
+          <div class="price">${tier.price}</div>
+          <ul>${tier.features.map(f => `<li>${f}</li>`).join('')}</ul>
+          <a href="${payment || '#contact'}" class="cta-btn">Get Started</a>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Prepared for ${biz.name} by ${brand}</p>
+  </div>
+</body>
+</html>`;
+
+    const slug = biz.name.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    const showcasePath = path.join(this.outputDir, `${slug}-showcase.html`);
+    await fs.writeFile(showcasePath, html, 'utf-8');
+
+    return {
+      name: biz.name,
+      showcasePath,
+      size: `${(html.length / 1024).toFixed(1)} KB`,
+      next: `Deploy this showcase page and use the URL in your outreach email.\nRun \`deploy\` or use \`vercel ${showcasePath} --yes\``,
+    };
+  }
+
+  /**
+   * Record a deployed showcase URL
+   *
+   * @param website Original website URL
+   * @param showcaseUrl The deployed showcase page URL
+   */
+  showcased({ website, showcaseUrl }: { website: string; showcaseUrl: string }) {
+    const deployed = this.state.deployed.find(
+      d => d.business.website === website
+    );
+    if (!deployed) throw new Error(`No deployed site for ${website}`);
+    deployed.showcaseUrl = showcaseUrl;
+    return { name: deployed.business.name, showcaseUrl };
   }
 
   // ── Full Pipeline ────────────────────────────────────────

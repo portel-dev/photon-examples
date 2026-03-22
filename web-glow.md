@@ -2,7 +2,7 @@
 
 WebGlow — Automated Website Redesign Pipeline Finds local businesses with ugly websites, redesigns them into polished demos, deploys them for free, and queues outreach. Schedule it daily to generate a steady stream of leads. Pipeline: scan → qualify → redesign → deploy → outreach Each instance (`_use`) targets a niche + city: `_use('nail-salons-sydney')` `_use('wedding-venues-london')` `_use('restaurants-austin')`
 
-> **13 tools** · Workflow Photon · v1.0.0 · MIT
+> **18 tools** · Workflow Photon · v1.0.0 · MIT
 
 **Platform Features:** `generator` `elicitation` `streaming` `stateful`
 
@@ -25,6 +25,11 @@ No configuration required.
 | `deploy` | Record a deployed site with its live URL. |
 | `draft` | Generate an outreach email draft for a deployed site. |
 | `contacted` | Mark a business as contacted |
+| `discover` | Find email addresses for businesses that don't have one. |
+| `nomail` | List businesses that still need email discovery |
+| `config` | Configure your brand name, services, and payment link |
+| `showcase` | Generate a showcase page for a deployed site. |
+| `showcased` | Record a deployed showcase URL |
 | `pipeline` ⚡ | Run the full pipeline as an interactive step-by-step workflow. |
 | `status` | Pipeline dashboard — overview of all stages |
 | `sites` | View all deployed sites ready for outreach |
@@ -164,6 +169,87 @@ Mark a business as contacted
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `website` | any | Yes | Original website URL |
+
+
+
+
+
+---
+
+
+### `discover`
+
+Find email addresses for businesses that don't have one. Use agent-browser to check the business website's contact page, footer, about page, and social media links. Updates the business record with the discovered email.
+
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `website` | any | Yes | Business website URL |
+| `email` | string } | Yes | Discovered email address |
+
+
+
+
+
+---
+
+
+### `nomail`
+
+List businesses that still need email discovery
+
+
+
+
+
+---
+
+
+### `config`
+
+Configure your brand name, services, and payment link
+
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `brand` | any | Yes | Your business/brand name (e.g. `WebGlow Studio`) |
+| `payment` | string | Yes | Payment link URL (Stripe, PayPal, etc.) (e.g. `https://buy.stripe.com/xxx`) |
+| `services` | ServiceTier[] | No | Optional custom service tiers |
+
+
+
+
+
+---
+
+
+### `showcase`
+
+Generate a showcase page for a deployed site. Creates a self-contained HTML page with: - Before/after screenshots side by side - Service tiers with pricing - Payment/contact link - Professional branding. Deploy this page and send the URL in outreach emails.
+
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `website` | any | Yes | Original website URL |
+| `beforeImg` | string | Yes | Path or URL of the old website screenshot |
+| `afterImg` | string | Yes | Path or URL of the new website screenshot |
+
+
+
+
+
+---
+
+
+### `showcased`
+
+Record a deployed showcase URL
+
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `website` | any | Yes | Original website URL |
+| `showcaseUrl` | string } | Yes | The deployed showcase page URL |
 
 
 
