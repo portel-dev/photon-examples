@@ -348,10 +348,10 @@
         "monitor"
       ],
       "assets": [
-        "walkthrough/assets/beam-search-cli.png",
-        "walkthrough/assets/beam-search-panel.png",
-        "walkthrough/assets/slides.md",
-        "walkthrough/assets/walkthrough-app-panel.png"
+        "walkthrough/beam-search-cli.png",
+        "walkthrough/beam-search-panel.png",
+        "walkthrough/slides.md",
+        "walkthrough/walkthrough-app-panel.png"
       ],
       "photonType": "workflow",
       "features": [
