@@ -8,6 +8,7 @@
  *
  * @version 1.0.0
  * @runtime ^1.9.0
+ * @icon 📡
  */
 
 import { startToolSpan, isTracingEnabled, waitForOtelProbe } from '../src/telemetry/otel.js';

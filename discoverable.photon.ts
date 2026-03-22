@@ -9,7 +9,7 @@
  * @version 2.0.0
  * @stateful
  * @label Discovery Demo
- * @icon magnifying-glass
+ * @icon 🔍
  */
 
 export default class Discoverable {

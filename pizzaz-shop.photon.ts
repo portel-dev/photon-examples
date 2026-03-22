@@ -10,6 +10,7 @@
  * @version 1.0.0
  * @author Photon Team
  * @runtime ^1.4.0
+ * @icon 🍕
  */
 
 import { io } from '@portel/photon-core';
