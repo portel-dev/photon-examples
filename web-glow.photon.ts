@@ -12,6 +12,20 @@
  *   `_use('wedding-venues-london')`
  *   `_use('restaurants-austin')`
  *
+ * ## Tools (all free)
+ *
+ * | Step | Tool | Cost | Alternative |
+ * |------|------|------|-------------|
+ * | Scan | Playwright + Google Maps | Free | Google Places API (5k/mo free) |
+ * | Qualify | Playwright screenshots | Free | — |
+ * | Redesign | LLM + Unsplash photos | LLM tokens | — |
+ * | Deploy | Vercel / Netlify / GitHub Pages | Free tier | Any static host |
+ * | Outreach | LLM drafts email | LLM tokens | — |
+ *
+ * No paid APIs required. The LLM drives each step using browser
+ * automation (Playwright) and free hosting. Apify is optional if
+ * you want faster bulk scraping (~$0.20/50 listings).
+ *
  * @version 1.0.0
  * @stateful
  * @icon ✨
@@ -379,7 +393,7 @@ Write a short, personalized cold email following these guidelines.`;
     // Step 1: Ask LLM to scan
     const scanRequest = yield {
       ask: 'scan',
-      message: `Search Google Maps for "${niche}" in "${city}". Find up to ${max} businesses that have both a website and an email address. Return JSON array: [{name, website, email, phone, address, category}]`,
+      message: `Search Google Maps for "${niche}" in "${city}". Find up to ${max} businesses that have both a website and an email address.\n\nUse Playwright to browse Google Maps (free), or the Google Places API if available. Apify is optional but not required.\n\nReturn JSON array: [{name, website, email, phone, address, category}]`,
     };
 
     if (scanRequest && Array.isArray(scanRequest)) {
@@ -427,7 +441,7 @@ Write a short, personalized cold email following these guidelines.`;
 
       const deployResult = yield {
         ask: 'deploy',
-        message: `Deploy the HTML file at ${site.htmlPath} to Vercel (or any free host). Return the live URL.`,
+        message: `Deploy the HTML file at ${site.htmlPath} to a free static host (Vercel, Netlify, or GitHub Pages). Use the CLI tool (e.g., \`vercel --yes\`). Return the live URL.`,
       };
 
       if (deployResult && typeof deployResult === 'string') {

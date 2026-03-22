@@ -542,8 +542,8 @@
       "license": "MIT",
       "icon": "✨",
       "source": "../web-glow.photon.ts",
-      "hash": "sha256:39b53f6f6d76629b0fe5a6e8652128e05a5767dd1108e3e3a6dcb6ddcf565ff6",
-      "contentHash": "sha256:39b53f6f6d76629b0fe5a6e8652128e05a5767dd1108e3e3a6dcb6ddcf565ff6",
+      "hash": "sha256:76047d5913c6e668228f666c1ac6ee37162fa6e39469cb0c08c3ffa2f7d16498",
+      "contentHash": "sha256:76047d5913c6e668228f666c1ac6ee37162fa6e39469cb0c08c3ffa2f7d16498",
       "tools": [
         "target",
         "scan",
