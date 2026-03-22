@@ -194,6 +194,31 @@
       ]
     },
     {
+      "name": "email-subject",
+      "version": "1.0.0",
+      "description": "Email Subject — AutoResearch target for email subject lines Implements the AutoResearch interface so autorun can optimize your email subject lines based on real open rates. Stores the template and pulls metrics from a CSV log.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "📧",
+      "source": "../email-subject.photon.ts",
+      "hash": "sha256:9fdb8ffd957aff5eb780b0ac5d2c66639c0fd55ce928f99ac05588d4ebaa6ecc",
+      "contentHash": "sha256:9fdb8ffd957aff5eb780b0ac5d2c66639c0fd55ce928f99ac05588d4ebaa6ecc",
+      "tools": [
+        "prompt",
+        "criteria",
+        "pull",
+        "update",
+        "add",
+        "campaigns",
+        "generate"
+      ],
+      "assets": [],
+      "photonType": "api",
+      "features": [
+        "stateful"
+      ]
+    },
+    {
       "name": "input-showcase",
       "version": "1.0.0",
       "description": "Input Showcase Demonstrates all input format types in the Photon auto-UI. Each method showcases a different input widget.",
@@ -230,6 +255,31 @@
       "assets": [],
       "photonType": "api",
       "features": []
+    },
+    {
+      "name": "landing-copy",
+      "version": "1.0.0",
+      "description": "Landing Copy — AutoResearch target for landing page copy Implements the AutoResearch interface so autorun can optimize your landing page hero copy based on conversion rates. Stores variants and tracks which ones convert.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "🎯",
+      "source": "../landing-copy.photon.ts",
+      "hash": "sha256:c1d460795ab157322d64bf5036ab7f17f65e5eaa28490bd3c6a0d3d0ed631fc3",
+      "contentHash": "sha256:c1d460795ab157322d64bf5036ab7f17f65e5eaa28490bd3c6a0d3d0ed631fc3",
+      "tools": [
+        "prompt",
+        "criteria",
+        "pull",
+        "update",
+        "add",
+        "variants",
+        "generate"
+      ],
+      "assets": [],
+      "photonType": "api",
+      "features": [
+        "stateful"
+      ]
     },
     {
       "name": "observable",
@@ -365,6 +415,31 @@
         "custom-ui",
         "stateful",
         "dashboard"
+      ]
+    },
+    {
+      "name": "social-hooks",
+      "version": "1.0.0",
+      "description": "Social Hooks — AutoResearch target for video/social media hooks Implements the AutoResearch interface so autorun can optimize your video hooks based on real view counts. Stores the prompt template as a markdown file and pulls metrics from a CSV log. Feed your view counts into the CSV and let the loop optimize which hook patterns get the most views.",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "🎬",
+      "source": "../social-hooks.photon.ts",
+      "hash": "sha256:6a46a9870333983e0289e54817b21d03941f141122135b644e057bd0662346b0",
+      "contentHash": "sha256:6a46a9870333983e0289e54817b21d03941f141122135b644e057bd0662346b0",
+      "tools": [
+        "prompt",
+        "criteria",
+        "pull",
+        "update",
+        "add",
+        "videos",
+        "generate"
+      ],
+      "assets": [],
+      "photonType": "api",
+      "features": [
+        "stateful"
       ]
     },
     {
