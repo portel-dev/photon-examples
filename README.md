@@ -141,9 +141,10 @@ Built on the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/intr
 | [**Social Hooks**](social-hooks.md) | Social Hooks — AutoResearch target for video/social media hooks Implements the AutoResearch interface so autorun can optimize your video hooks based on real view counts. Stores the prompt template as a markdown file and pulls metrics from a CSV log. Feed your view counts into the CSV and let the loop optimize which hook patterns get the most views. | 7 | - |
 | [**Spreadsheet**](spreadsheet.md) | Spreadsheet — CSV-backed spreadsheet with formulas A spreadsheet engine that works on plain CSV files. Formulas (=SUM, =AVG, etc.) are stored directly in CSV cells and evaluated at runtime. Named instances map to CSV files: `_use('budget')` → `budget.csv` in your spreadsheets folder. Pass a full path to open any CSV: `_use('/path/to/data.csv')`. | 37 | 🎨🎨 |
 | [**Walkthrough**](walkthrough.md) | Photon Walkthrough An interactive step-by-step guide to building photons. Every demo is a real method on this photon — zero external dependencies. The slides show code for named classes, but the live UI calls these methods. | 8 | ⚡⚡ |
+| [**Web Glow**](web-glow.md) | WebGlow — Automated Website Redesign Pipeline Finds local businesses with ugly websites, redesigns them into polished demos, deploys them for free, and queues outreach. Schedule it daily to generate a steady stream of leads. Pipeline: scan → qualify → redesign → deploy → outreach Each instance (`_use`) targets a niche + city: `_use('nail-salons-sydney')` `_use('wedding-venues-london')` `_use('restaurants-austin')` | 13 | ⚡💬⚡ |
 
 
-**Total:** 19 photons ready to use
+**Total:** 20 photons ready to use
 
 ---
 
@@ -187,7 +188,7 @@ Output (paste directly into your MCP client config):
 
 Add the output to your MCP client's configuration. **Consult your client's documentation** for setup instructions.
 
-**That's it!** Your AI assistant now has 19 focused tools at its fingertips.
+**That's it!** Your AI assistant now has 20 focused tools at its fingertips.
 
 ---
 
@@ -253,7 +254,7 @@ Each photon delivers **singular focus** to a **precise target**.
 
 **Key Features:**
 - 🎯 Each photon does one thing perfectly
-- 📦 19 production-ready photons available
+- 📦 20 production-ready photons available
 - ⚡ Auto-installs dependencies
 - 🔧 Works out of the box
 - 📄 Single-file design (easy to fork and customize)

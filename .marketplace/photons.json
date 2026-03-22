@@ -533,6 +533,40 @@
         "generator",
         "streaming"
       ]
+    },
+    {
+      "name": "web-glow",
+      "version": "1.0.0",
+      "description": "WebGlow — Automated Website Redesign Pipeline Finds local businesses with ugly websites, redesigns them into polished demos, deploys them for free, and queues outreach. Schedule it daily to generate a steady stream of leads. Pipeline: scan → qualify → redesign → deploy → outreach Each instance (`_use`) targets a niche + city: `_use('nail-salons-sydney')` `_use('wedding-venues-london')` `_use('restaurants-austin')`",
+      "author": "Unknown",
+      "license": "MIT",
+      "icon": "✨",
+      "source": "../web-glow.photon.ts",
+      "hash": "sha256:39b53f6f6d76629b0fe5a6e8652128e05a5767dd1108e3e3a6dcb6ddcf565ff6",
+      "contentHash": "sha256:39b53f6f6d76629b0fe5a6e8652128e05a5767dd1108e3e3a6dcb6ddcf565ff6",
+      "tools": [
+        "target",
+        "scan",
+        "qualify",
+        "pending",
+        "redesign",
+        "queue",
+        "deploy",
+        "draft",
+        "contacted",
+        "pipeline",
+        "status",
+        "sites",
+        "history"
+      ],
+      "assets": [],
+      "photonType": "workflow",
+      "features": [
+        "generator",
+        "elicitation",
+        "streaming",
+        "stateful"
+      ]
     }
   ]
 }
