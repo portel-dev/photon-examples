@@ -300,25 +300,42 @@
       return slideTransitions[idx] || globalTransition;
     }
 
+    let firstRender = true;
+
     function updateSlide() {
       const container = document.getElementById("marp-container");
       const children = container.querySelectorAll(":scope > section, :scope > svg");
 
-      // Determine transition
+      // No transition on first render — show immediately without flicker
+      if (firstRender) {
+        firstRender = false;
+        container.setAttribute("data-transition", "none");
+        children.forEach((s, i) => {
+          s.classList.toggle("active", i === currentIdx);
+        });
+        prevIdx = currentIdx;
+        document.getElementById("progress").textContent = `${currentIdx + 1} / ${children.length}`;
+        document.getElementById("prev-btn").disabled = currentIdx === 0;
+        document.getElementById("next-btn").disabled = currentIdx >= children.length - 1;
+        document.getElementById("transition-select").value = getTransitionForSlide(currentIdx);
+        return;
+      }
+
+      // Determine transition for slide changes
       let transition = "fade";
       if (prevIdx >= 0 && prevIdx !== currentIdx) {
         transition = getTransitionForSlide(currentIdx);
-        // For "slide" type, reverse direction when going backward
         if (transition === "slide" && currentIdx < prevIdx) {
           transition = "slide-back";
         }
       }
 
-      // Force reflow to restart animation
-      container.removeAttribute("data-transition");
-      void container.offsetHeight;
+      // Set transition BEFORE activating the slide to avoid opacity:0 flash
       container.setAttribute("data-transition", transition);
-
+      // Force animation restart by briefly removing active, then re-adding
+      const prevActive = container.querySelector(".active");
+      if (prevActive) prevActive.classList.remove("active");
+      void container.offsetHeight;
       children.forEach((s, i) => {
         s.classList.toggle("active", i === currentIdx);
       });
