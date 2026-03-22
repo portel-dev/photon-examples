@@ -145,7 +145,30 @@
       "source": "../input-showcase.photon.ts",
       "hash": "sha256:98d5f2207e707521d06079e74c101f44a865d08e65f8dd9cefc3ca867fe73804",
       "contentHash": "sha256:98d5f2207e707521d06079e74c101f44a865d08e65f8dd9cefc3ca867fe73804",
-      "tools": [],
+      "tools": [
+        "text",
+        "email",
+        "secret",
+        "website",
+        "phone",
+        "color",
+        "search",
+        "date",
+        "birthday",
+        "datetime",
+        "daterange",
+        "tags",
+        "rate",
+        "segment",
+        "radio",
+        "code",
+        "markdown",
+        "slider",
+        "toggle",
+        "dropdown",
+        "filepick",
+        "textarea"
+      ],
       "assets": [],
       "photonType": "api",
       "features": []
@@ -202,7 +225,19 @@
       "hash": "sha256:63ac51416e28266647fe30a6deab1d2a9c39c8f0f920390f33a2ac989bcede03",
       "contentHash": "sha256:14061cbb15a0884797872c818f8b30e7aa214293c3437dc84bd69cdbb107882e",
       "tools": [
-        "main"
+        "main",
+        "users",
+        "cpu",
+        "memory",
+        "revenue",
+        "temperature",
+        "activeUsers",
+        "deployment",
+        "activity",
+        "services",
+        "team",
+        "config",
+        "changelog"
       ],
       "assets": [
         "render-showcase/ui/dashboard.html",
@@ -345,6 +380,13 @@
       "hash": "sha256:2b1645fc0cce25e0a63408f26515f966b2f78b39af134909cb53454ed3a8226c",
       "contentHash": "sha256:fa352f8971077471515023ec803ed9af092999010a9758fef30c5637f251afb6",
       "tools": [
+        "main",
+        "greet",
+        "add",
+        "team",
+        "health",
+        "revenue",
+        "register",
         "monitor"
       ],
       "assets": [
