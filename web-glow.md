@@ -69,7 +69,7 @@ Add businesses found from scraping Google Maps or other sources. Feed the result
 
 ### `qualify`
 
-Submit qualification results for scanned businesses. After screenshotting and assessing each website, submit the results here. The calling LLM should visit each site, take a screenshot, and assess whether it's worth redesigning based on these signals: - Outdated visual design (pre-2015 aesthetics) - Broken or table-based layouts - Poor typography and color choices - Missing mobile responsiveness - Cluttered or confusing navigation - No clear call-to-action
+Submit qualification results for scanned businesses. After screenshotting and assessing each website, submit the results here. Use `agent-browser open <url>` then `agent-browser screenshot <path>` to capture each site. Assess whether it's worth redesigning based on: - Outdated visual design (pre-2015 aesthetics) - Broken or table-based layouts - Poor typography and color choices - Missing mobile responsiveness - Cluttered or confusing navigation - No clear call-to-action
 
 
 | Parameter | Type | Required | Description |
@@ -240,7 +240,7 @@ flowchart TD
         N1 --> N2
         N3[📣 render]
         N2 --> N3
-        N4{❓ Visit each of these we...}
+        N4{❓ Visit each website and...}
         N3 --> N4
         N5[📢 ${worth.length} sites worth...]
         N4 --> N5

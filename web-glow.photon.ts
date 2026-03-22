@@ -14,17 +14,22 @@
  *
  * ## Tools (all free)
  *
- * | Step | Tool | Cost | Alternative |
- * |------|------|------|-------------|
- * | Scan | Playwright + Google Maps | Free | Google Places API (5k/mo free) |
- * | Qualify | Playwright screenshots | Free | — |
- * | Redesign | LLM + Unsplash photos | LLM tokens | — |
- * | Deploy | Vercel / Netlify / GitHub Pages | Free tier | Any static host |
- * | Outreach | LLM drafts email | LLM tokens | — |
+ * | Step | Tool | Cost |
+ * |------|------|------|
+ * | Scan | `agent-browser` → Google Maps | Free |
+ * | Qualify | `agent-browser screenshot` | Free |
+ * | Redesign | LLM + Unsplash photos | LLM tokens only |
+ * | Deploy | Vercel / Netlify / GitHub Pages | Free tier |
+ * | Outreach | LLM drafts email | LLM tokens only |
  *
- * No paid APIs required. The LLM drives each step using browser
- * automation (Playwright) and free hosting. Apify is optional if
- * you want faster bulk scraping (~$0.20/50 listings).
+ * No paid APIs required. Uses `agent-browser` CLI for all browser
+ * automation (scraping Google Maps, taking screenshots, reading pages).
+ *
+ * agent-browser commands:
+ *   `agent-browser open <url>` — navigate to page
+ *   `agent-browser snapshot -i` — get interactive elements with refs
+ *   `agent-browser click @e1` / `fill @e2 "text"` — interact
+ *   `agent-browser screenshot <path>` — capture full page
  *
  * @version 1.0.0
  * @stateful
@@ -151,8 +156,8 @@ export default class WebGlow {
    * Submit qualification results for scanned businesses
    *
    * After screenshotting and assessing each website, submit the results here.
-   * The calling LLM should visit each site, take a screenshot, and assess
-   * whether it's worth redesigning based on these signals:
+   * Use `agent-browser open <url>` then `agent-browser screenshot <path>`
+   * to capture each site. Assess whether it's worth redesigning based on:
    * - Outdated visual design (pre-2015 aesthetics)
    * - Broken or table-based layouts
    * - Poor typography and color choices
@@ -393,7 +398,7 @@ Write a short, personalized cold email following these guidelines.`;
     // Step 1: Ask LLM to scan
     const scanRequest = yield {
       ask: 'scan',
-      message: `Search Google Maps for "${niche}" in "${city}". Find up to ${max} businesses that have both a website and an email address.\n\nUse Playwright to browse Google Maps (free), or the Google Places API if available. Apify is optional but not required.\n\nReturn JSON array: [{name, website, email, phone, address, category}]`,
+      message: `Search Google Maps for "${niche}" in "${city}". Find up to ${max} businesses that have both a website and an email address.\n\nUse agent-browser:\n  1. \`agent-browser open "https://www.google.com/maps/search/${encodeURIComponent(niche + ' in ' + city)}"\`\n  2. \`agent-browser snapshot -i\` to get listing elements\n  3. Click each listing, extract name, website, email, phone, address\n  4. Re-snapshot after page changes\n\nReturn JSON array: [{name, website, email, phone, address, category}]`,
     };
 
     if (scanRequest && Array.isArray(scanRequest)) {
@@ -406,7 +411,7 @@ Write a short, personalized cold email following these guidelines.`;
 
     const qualifyRequest = yield {
       ask: 'qualify',
-      message: `Visit each of these websites and assess their design quality. For each, determine if it's worth redesigning.\n\n${this.state.scanned.map(b => `- ${b.name}: ${b.website}`).join('\n')}\n\nReturn JSON array: [{name, website, email, qualityScore ("poor"|"outdated"|"acceptable"|"good"), issues: string[], worthRedesigning: boolean}]`,
+      message: `Visit each website and assess its design quality. For each:\n  1. \`agent-browser open "<url>"\`\n  2. \`agent-browser screenshot /tmp/webglow-<name>.png\`\n  3. View the screenshot and assess quality\n\nWebsites to assess:\n${this.state.scanned.map(b => `- ${b.name}: ${b.website}`).join('\n')}\n\nReturn JSON array: [{name, website, email, qualityScore ("poor"|"outdated"|"acceptable"|"good"), issues: string[], worthRedesigning: boolean}]`,
     };
 
     if (qualifyRequest && Array.isArray(qualifyRequest)) {
@@ -422,7 +427,7 @@ Write a short, personalized cold email following these guidelines.`;
 
       const redesignResult = yield {
         ask: 'redesign',
-        message: `Redesign ${lead.name}'s website (${lead.website}). Visit their current site, read their content, and generate a single polished HTML file. Use modern design (clean typography, good spacing, mobile-responsive). Include their real business info. Use Unsplash for stock photos. Return the complete HTML.`,
+        message: `Redesign ${lead.name}'s website (${lead.website}).\n\n1. \`agent-browser open "${lead.website}"\` and \`agent-browser snapshot -i\` to read their content\n2. Extract business name, services, story, contact info, address\n3. Generate a single polished HTML file with:\n   - Modern design (clean typography, good spacing, mobile-responsive)\n   - Their real business info from the current site\n   - Unsplash stock photos (use \`https://source.unsplash.com/800x600/?keyword\`)\n   - Google Maps embed for their address\n4. Return the complete HTML.`,
       };
 
       if (redesignResult && typeof redesignResult === 'string') {
