@@ -599,6 +599,16 @@
 
     <div class="tb-sep"></div>
 
+    <select class="tb-select" id="layout-select" title="Slide layout">
+      <option value="">Layout</option>
+      <option value="title">Title Slide</option>
+      <option value="bullets">Bullets</option>
+      <option value="image-right">Image + Text</option>
+      <option value="two-col">Two Columns</option>
+      <option value="quote">Quote</option>
+      <option value="blank">Blank</option>
+    </select>
+
     <select class="tb-select" id="theme-select" title="Marp theme">
       <option value="default">Default</option>
       <option value="gaia">Gaia</option>
@@ -994,6 +1004,32 @@
         const r = parseMCP(await slidesApp.save({ markdown: fullMd }));
         if (r && r.html) loadDeck(r);
       }
+    });
+
+    // ── Layout Picker ──
+
+    const LAYOUTS = {
+      title: '# Presentation Title\n### Subtitle or author name',
+      bullets: '## Section Title\n\n- First point\n- Second point\n- Third point\n- Fourth point',
+      'image-right': '![bg right](https://picsum.photos/800/600)\n\n## Image & Text\n\nDescribe the image or add context here.',
+      'two-col': '## Left Column\n\nContent for the left side.\n\n---\n\n## Right Column\n\nContent for the right side.',
+      quote: '> "The best way to predict the future is to invent it."\n>\n> — Alan Kay',
+      blank: '\n',
+    };
+
+    document.getElementById("layout-select").addEventListener("change", async (e) => {
+      const layout = e.target.value;
+      if (!layout || !LAYOUTS[layout]) { e.target.value = ''; return; }
+
+      const newMd = LAYOUTS[layout];
+      // Update current slide's markdown
+      if (slides[currentIdx]) {
+        slides[currentIdx].markdown = newMd;
+        document.getElementById("editor").value = newMd;
+        editorDirty = true;
+        await saveCurrentSlide();
+      }
+      e.target.value = ''; // Reset dropdown to "Layout" label
     });
 
     // ── Presentation Mode ──
