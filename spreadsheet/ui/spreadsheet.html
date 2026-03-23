@@ -681,6 +681,9 @@
             <button class="btn btn-icon" onclick="spreadsheet.addRow()" title="Add Row">Add Row</button>
             <button class="btn btn-icon" onclick="spreadsheet.addColumn()" title="Add Column">Add Col</button>
         </div>
+        <div class="toolbar-section" style="border-right:none;margin-left:auto;">
+            <input type="text" id="searchInput" placeholder="Search..." style="background:var(--bg-primary);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-size:12px;color:var(--text-primary);width:160px;outline:none;" autocomplete="off">
+        </div>
     </div>
 
     <!-- Formula Bar -->
@@ -774,18 +777,63 @@
     </div>
 
     <script>
+        // ── MCP Helpers ──
+
+        function parseMCP(raw) {
+            if (raw && raw.content && Array.isArray(raw.content)) {
+                const item = raw.content.find(c => c.type === "text" && c.text);
+                if (item) { try { return JSON.parse(item.text); } catch { return item.text; } }
+            }
+            return raw;
+        }
+
+        /** Convert col index (0-based) to letter(s): 0->A, 25->Z, 26->AA */
+        function colToLetter(c) {
+            let name = '';
+            let num = c + 1;
+            while (num > 0) {
+                num--;
+                name = String.fromCharCode(65 + (num % 26)) + name;
+                num = Math.floor(num / 26);
+            }
+            return name;
+        }
+
+        /** Convert A1-style cell ref to {row, col} (0-based) */
+        function cellRefToIndex(ref) {
+            const m = ref.match(/^([A-Z]+)(\d+)$/i);
+            if (!m) return null;
+            let col = 0;
+            for (const ch of m[1].toUpperCase()) {
+                col = col * 26 + (ch.charCodeAt(0) - 64);
+            }
+            return { row: parseInt(m[2], 10) - 1, col: col - 1 };
+        }
+
+        /** Build cell ref from 0-based row/col */
+        function indexToCellRef(row, col) {
+            return colToLetter(col) + (row + 1);
+        }
+
+        // ── Spreadsheet Engine ──
+
+        const app = window["spreadsheet"];
+
         class SpreadsheetEngine {
             constructor(rows = 20, cols = 10) {
                 this.data = [];
-                this.formulas = [];
+                this.backendFormulas = {};   // { "A1": "=SUM(...)" } from backend
                 this.headers = [];
                 this.rowCount = rows;
                 this.colCount = cols;
                 this.selectedCell = { row: 0, col: 0 };
+                this.editing = false;
                 this.currentTable = 'default';
                 this.tables = [];
                 this.openTabs = ['default'];
                 this.sidebarVisible = false;
+                this.sortState = {};         // { column, direction }
+                this.contextCell = null;     // { row, col } for context menu
                 this.init();
             }
 
@@ -794,32 +842,59 @@
                 this.initializeData();
                 this.render();
                 this.renderTabs();
+                this.bindEvents();
                 document.getElementById('sidebar')?.classList.add('collapsed');
             }
 
             generateHeaders() {
                 this.headers = [];
                 for (let i = 0; i < this.colCount; i++) {
-                    let name = '';
-                    let num = i + 1;
-                    while (num > 0) {
-                        num--;
-                        name = String.fromCharCode(65 + (num % 26)) + name;
-                        num = Math.floor(num / 26);
-                    }
-                    this.headers.push(name);
+                    this.headers.push(colToLetter(i));
                 }
             }
 
             initializeData() {
                 this.data = Array.from({length: this.rowCount}, () => new Array(this.colCount).fill(''));
-                this.formulas = Array.from({length: this.rowCount}, () => new Array(this.colCount).fill(''));
+            }
+
+            /** Load backend snapshot data into the local grid */
+            loadFromSnapshot(snap) {
+                if (!snap) return;
+
+                // Headers from backend (these are the real column names)
+                if (snap.headers && snap.headers.length) {
+                    this.headers = snap.headers;
+                    this.colCount = snap.headers.length;
+                }
+
+                // Data rows
+                if (snap.data) {
+                    this.data = snap.data.map(row => [...row]);
+                    this.rowCount = this.data.length;
+                }
+
+                // Pad grid to at least a minimal size for empty spreadsheets
+                const minRows = 20, minCols = Math.max(this.colCount, 10);
+                while (this.data.length < minRows) {
+                    this.data.push(new Array(this.colCount).fill(''));
+                    this.rowCount++;
+                }
+
+                // Formulas map
+                this.backendFormulas = snap.formulas || {};
+
+                // Rows/cols count from snapshot
+                if (snap.rows != null) this.rowCount = Math.max(this.rowCount, snap.rows);
+                if (snap.cols != null) this.colCount = Math.max(this.colCount, snap.cols);
+
+                this.render();
+                this.updateStatus(snap.message || `${this.rowCount} rows x ${this.colCount} cols`);
             }
 
             toggleSidebar() {
                 this.sidebarVisible = !this.sidebarVisible;
                 document.getElementById('sidebar').classList.toggle('collapsed', !this.sidebarVisible);
-                document.getElementById('sidebarToggle').textContent = this.sidebarVisible ? '◀' : '▶';
+                document.getElementById('sidebarToggle').textContent = this.sidebarVisible ? '\u25C0' : '\u25B6';
             }
 
             newSheet() {
@@ -828,13 +903,17 @@
                 this.switchSheet(name);
             }
 
-            switchSheet(name) {
+            async switchSheet(name) {
                 this.currentTable = name;
                 if (!this.openTabs.includes(name)) {
                     this.openTabs.push(name);
                 }
                 this.renderTabs();
-                if (window.loadDataFromPhoton) window.loadDataFromPhoton();
+                // Switch backend instance and reload
+                if (window.photon?.switchInstance) {
+                    await window.photon.switchInstance(name);
+                }
+                await loadDataFromPhoton();
             }
 
             closeTab(name, e) {
@@ -854,7 +933,7 @@
                 let html = this.openTabs.map(tab => `
                     <div class="tab ${tab === this.currentTable ? 'active' : ''}" onclick="spreadsheet.switchSheet('${tab}')">
                         <span>${tab}</span>
-                        <span class="tab-close" onclick="spreadsheet.closeTab('${tab}', event)">×</span>
+                        <span class="tab-close" onclick="spreadsheet.closeTab('${tab}', event)">\u00d7</span>
                     </div>
                 `).join('');
                 html += '<div class="btn-new-tab" onclick="spreadsheet.newSheet()" title="New Sheet">+</div>';
@@ -867,7 +946,7 @@
                 if (!list) return;
                 list.innerHTML = tables.map(table => `
                     <div class="table-item ${table.name === this.currentTable ? 'active' : ''}" onclick="spreadsheet.switchSheet('${table.name}')">
-                        <span>📄 ${table.name}</span>
+                        <span>\uD83D\uDCC4 ${table.name}</span>
                         <span class="table-info">${(table.size / 1024).toFixed(1)} KB</span>
                     </div>
                 `).join('');
@@ -876,32 +955,500 @@
             render() {
                 const thead = document.getElementById('tableHead');
                 const tbody = document.getElementById('tableBody');
-                
-                thead.innerHTML = '<tr><th class="corner"></th>' + 
-                    this.headers.map(h => `<th class="col-header">${h}</th>`).join('') + '</tr>';
+
+                // Column headers — clickable to sort
+                thead.innerHTML = '<tr><th class="corner"></th>' +
+                    this.headers.map((h, c) => {
+                        const sortIcon = this.sortState.column === h
+                            ? (this.sortState.direction === 'asc' ? ' \u25B2' : ' \u25BC') : '';
+                        return `<th class="col-header" data-col="${c}" title="Click to sort">${h}${sortIcon}</th>`;
+                    }).join('') + '</tr>';
 
                 tbody.innerHTML = this.data.map((row, r) => `
                     <tr>
                         <th class="row-header">${r + 1}</th>
-                        ${row.map((cell, c) => `
-                            <td data-row="${r}" data-col="${c}">
-                                <div class="cell-content">${cell}</div>
-                            </td>
-                        `).join('')}
+                        ${row.map((cell, c) => {
+                            const isSelected = r === this.selectedCell.row && c === this.selectedCell.col;
+                            const style = isSelected ? 'outline: 2px solid var(--selection); outline-offset: -1px; z-index: 5;' : '';
+                            return `<td data-row="${r}" data-col="${c}" style="${style}">
+                                <div class="cell-content">${this.escapeHtml(cell)}</div>
+                            </td>`;
+                        }).join('')}
                     </tr>
                 `).join('');
+
+                this.updateCellRef();
             }
 
-            // Stubs for bridge overrides
-            addRow() {}
-            addColumn() {}
-            newFile() {}
-            openImportModal() {}
-            exportCSV() {}
+            escapeHtml(str) {
+                if (str == null) return '';
+                return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            }
+
+            // ── Cell Selection & Editing ──
+
+            bindEvents() {
+                const container = document.getElementById('sheetContainer');
+
+                // Cell click -> select
+                container.addEventListener('click', (e) => {
+                    const td = e.target.closest('td[data-row]');
+                    if (!td) return;
+                    const row = parseInt(td.dataset.row);
+                    const col = parseInt(td.dataset.col);
+                    this.selectCell(row, col);
+                });
+
+                // Cell double-click -> edit
+                container.addEventListener('dblclick', (e) => {
+                    const td = e.target.closest('td[data-row]');
+                    if (!td) return;
+                    const row = parseInt(td.dataset.row);
+                    const col = parseInt(td.dataset.col);
+                    this.startEditing(row, col);
+                });
+
+                // Context menu
+                container.addEventListener('contextmenu', (e) => {
+                    const td = e.target.closest('td[data-row]');
+                    if (!td) return;
+                    e.preventDefault();
+                    this.contextCell = {
+                        row: parseInt(td.dataset.row),
+                        col: parseInt(td.dataset.col)
+                    };
+                    this.showContextMenu(e.clientX, e.clientY);
+                });
+
+                // Column header click -> sort
+                document.getElementById('tableHead').addEventListener('click', (e) => {
+                    const th = e.target.closest('th.col-header');
+                    if (!th) return;
+                    const colIdx = parseInt(th.dataset.col);
+                    const colName = this.headers[colIdx];
+                    if (!colName) return;
+                    this.sortByColumn(colName);
+                });
+
+                // Formula bar input
+                const formulaInput = document.getElementById('formulaInput');
+                formulaInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.commitFormulaBar();
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        formulaInput.blur();
+                    }
+                });
+
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    if (this.editing) return;
+                    if (document.getElementById('pickerOverlay').classList.contains('visible')) return;
+                    if (e.target.closest('.formula-input-wrapper')) return;
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                    const { row, col } = this.selectedCell;
+                    switch (e.key) {
+                        case 'ArrowUp':    e.preventDefault(); this.selectCell(Math.max(0, row - 1), col); break;
+                        case 'ArrowDown':  e.preventDefault(); this.selectCell(Math.min(this.rowCount - 1, row + 1), col); break;
+                        case 'ArrowLeft':  e.preventDefault(); this.selectCell(row, Math.max(0, col - 1)); break;
+                        case 'ArrowRight': e.preventDefault(); this.selectCell(row, Math.min(this.colCount - 1, col + 1)); break;
+                        case 'Tab':
+                            e.preventDefault();
+                            if (e.shiftKey) this.selectCell(row, Math.max(0, col - 1));
+                            else this.selectCell(row, Math.min(this.colCount - 1, col + 1));
+                            break;
+                        case 'Enter':
+                            e.preventDefault();
+                            this.startEditing(row, col);
+                            break;
+                        case 'Delete':
+                        case 'Backspace':
+                            e.preventDefault();
+                            this.clearCurrentCell();
+                            break;
+                        default:
+                            // Start typing directly into cell
+                            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+                                this.startEditing(row, col, e.key);
+                                e.preventDefault();
+                            }
+                    }
+                });
+
+                // Click outside context menu to close
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.context-menu')) {
+                        document.getElementById('contextMenu').classList.remove('visible');
+                    }
+                });
+
+                // Context menu items
+                document.getElementById('contextMenu').addEventListener('click', (e) => {
+                    const item = e.target.closest('.context-menu-item');
+                    if (!item) return;
+                    document.getElementById('contextMenu').classList.remove('visible');
+                    this.handleContextAction(item.dataset.action);
+                });
+
+                // Search input
+                let searchTimeout = null;
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', () => {
+                        clearTimeout(searchTimeout);
+                        searchTimeout = setTimeout(() => this.performSearch(searchInput.value), 300);
+                    });
+                    searchInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape') { searchInput.value = ''; loadDataFromPhoton(); }
+                    });
+                }
+            }
+
+            selectCell(row, col) {
+                this.selectedCell = { row, col };
+                this.render();
+                this.fetchCellForFormulaBar(row, col);
+            }
+
+            updateCellRef() {
+                const ref = indexToCellRef(this.selectedCell.row, this.selectedCell.col);
+                document.getElementById('cellRef').textContent = ref;
+            }
+
+            async fetchCellForFormulaBar(row, col) {
+                const ref = indexToCellRef(row, col);
+                document.getElementById('cellRef').textContent = ref;
+
+                // Check local formula map first
+                const formula = this.backendFormulas[ref];
+                const formulaInput = document.getElementById('formulaInput');
+
+                if (formula) {
+                    formulaInput.value = formula;
+                } else if (app) {
+                    // Fetch from backend for latest raw value
+                    try {
+                        const result = parseMCP(await app.get({ cell: ref }));
+                        if (result && result.raw != null) {
+                            formulaInput.value = result.raw;
+                        } else {
+                            formulaInput.value = this.data[row]?.[col] || '';
+                        }
+                    } catch {
+                        formulaInput.value = this.data[row]?.[col] || '';
+                    }
+                } else {
+                    formulaInput.value = this.data[row]?.[col] || '';
+                }
+            }
+
+            async commitFormulaBar() {
+                const ref = indexToCellRef(this.selectedCell.row, this.selectedCell.col);
+                const value = document.getElementById('formulaInput').value;
+                await this.setCellValue(ref, value);
+                document.getElementById('formulaInput').blur();
+            }
+
+            startEditing(row, col, initialChar) {
+                this.editing = true;
+                const td = document.querySelector(`td[data-row="${row}"][data-col="${col}"]`);
+                if (!td) return;
+
+                const ref = indexToCellRef(row, col);
+                const formula = this.backendFormulas[ref];
+                const currentValue = formula || this.data[row]?.[col] || '';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = initialChar != null ? initialChar : currentValue;
+                input.style.cssText = 'width:100%;height:100%;border:none;outline:none;padding:0 6px;font-size:13px;background:var(--cell-active);color:var(--text-primary);font-family:inherit;';
+                td.innerHTML = '';
+                td.appendChild(input);
+                input.focus();
+                if (initialChar != null) {
+                    input.setSelectionRange(input.value.length, input.value.length);
+                } else {
+                    input.select();
+                }
+
+                const commit = async () => {
+                    this.editing = false;
+                    const newValue = input.value;
+                    await this.setCellValue(ref, newValue);
+                };
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+                    else if (e.key === 'Escape') { e.preventDefault(); this.editing = false; this.render(); }
+                    else if (e.key === 'Tab') { e.preventDefault(); commit().then(() => {
+                        if (e.shiftKey) this.selectCell(row, Math.max(0, col - 1));
+                        else this.selectCell(row, Math.min(this.colCount - 1, col + 1));
+                    }); }
+                });
+                input.addEventListener('blur', () => {
+                    if (this.editing) commit();
+                });
+            }
+
+            async setCellValue(ref, value) {
+                if (!app) {
+                    // No backend — just set locally
+                    const idx = cellRefToIndex(ref);
+                    if (idx && this.data[idx.row]) {
+                        this.data[idx.row][idx.col] = value;
+                    }
+                    this.render();
+                    return;
+                }
+
+                try {
+                    this.updateStatus('Saving...');
+                    const result = parseMCP(await app.set({ cell: ref, value: String(value) }));
+                    if (result) {
+                        this.loadFromSnapshot(result);
+                    }
+                } catch (err) {
+                    this.updateStatus('Error: ' + (err.message || err));
+                }
+            }
+
+            async clearCurrentCell() {
+                const ref = indexToCellRef(this.selectedCell.row, this.selectedCell.col);
+                if (app) {
+                    try {
+                        const result = parseMCP(await app.clear({ range: ref }));
+                        if (result) this.loadFromSnapshot(result);
+                    } catch (err) {
+                        this.updateStatus('Error: ' + (err.message || err));
+                    }
+                } else {
+                    this.data[this.selectedCell.row][this.selectedCell.col] = '';
+                    this.render();
+                }
+            }
+
+            // ── Row/Column Operations ──
+
+            async addRow() {
+                if (!app) return;
+                try {
+                    this.updateStatus('Adding row...');
+                    // Add empty row with column names as keys
+                    const values = {};
+                    this.headers.forEach(h => { values[h] = ''; });
+                    const result = parseMCP(await app.add({ values }));
+                    if (result) this.loadFromSnapshot(result);
+                } catch (err) {
+                    this.updateStatus('Error: ' + (err.message || err));
+                }
+            }
+
+            async addColumn() {
+                if (!app) return;
+                const name = prompt('Column name:');
+                if (!name) return;
+                try {
+                    this.updateStatus('Adding column...');
+                    // Insert after last column
+                    const lastCol = colToLetter(this.colCount);
+                    const result = parseMCP(await app.insertColumn({ column: lastCol, name }));
+                    if (result) this.loadFromSnapshot(result);
+                } catch (err) {
+                    this.updateStatus('Error: ' + (err.message || err));
+                }
+            }
+
+            async newFile() {
+                const name = prompt('New spreadsheet name:');
+                if (!name) return;
+                await this.switchSheet(name.replace(/\.csv$/i, ''));
+            }
+
+            async openImportModal() {
+                const csv = prompt('Paste CSV data (first row = headers):');
+                if (!csv || !app) return;
+                try {
+                    this.updateStatus('Importing...');
+                    const result = parseMCP(await app.ingest({ csv }));
+                    if (result) this.loadFromSnapshot(result);
+                } catch (err) {
+                    this.updateStatus('Error: ' + (err.message || err));
+                }
+            }
+
+            async exportCSV() {
+                if (!app) return;
+                try {
+                    const result = parseMCP(await app.dump());
+                    if (result && result.csv) {
+                        const blob = new Blob([result.csv], { type: 'text/csv' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = (this.currentTable || 'spreadsheet') + '.csv';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        this.updateStatus('Exported CSV');
+                    }
+                } catch (err) {
+                    this.updateStatus('Error: ' + (err.message || err));
+                }
+            }
+
+            // ── Sort ──
+
+            async sortByColumn(colName) {
+                if (!app) return;
+                const dir = (this.sortState.column === colName && this.sortState.direction === 'asc') ? 'desc' : 'asc';
+                try {
+                    this.updateStatus(`Sorting by ${colName}...`);
+                    const result = parseMCP(await app.sort({ column: colName, order: dir }));
+                    this.sortState = { column: colName, direction: dir };
+                    if (result) this.loadFromSnapshot(result);
+                } catch (err) {
+                    this.updateStatus('Error: ' + (err.message || err));
+                }
+            }
+
+            // ── Context Menu ──
+
+            showContextMenu(x, y) {
+                const menu = document.getElementById('contextMenu');
+                menu.style.left = x + 'px';
+                menu.style.top = y + 'px';
+                menu.classList.add('visible');
+            }
+
+            async handleContextAction(action) {
+                if (!this.contextCell) return;
+                const { row, col } = this.contextCell;
+                const rowNum = row + 1;
+                const colName = this.headers[col] || colToLetter(col);
+
+                switch (action) {
+                    case 'insert-row-above':
+                        if (app) {
+                            const r = parseMCP(await app.insertRow({ row: rowNum }));
+                            if (r) this.loadFromSnapshot(r);
+                        }
+                        break;
+                    case 'insert-row-below':
+                        if (app) {
+                            const r = parseMCP(await app.insertRow({ row: rowNum + 1 }));
+                            if (r) this.loadFromSnapshot(r);
+                        }
+                        break;
+                    case 'insert-col-left':
+                        if (app) {
+                            const name = prompt('New column name:');
+                            if (!name) return;
+                            const r = parseMCP(await app.insertColumn({ column: colName, name }));
+                            if (r) this.loadFromSnapshot(r);
+                        }
+                        break;
+                    case 'insert-col-right': {
+                        if (app) {
+                            const name = prompt('New column name:');
+                            if (!name) return;
+                            const nextCol = col + 1 < this.colCount ? this.headers[col + 1] : colToLetter(col + 1);
+                            const r = parseMCP(await app.insertColumn({ column: nextCol, name }));
+                            if (r) this.loadFromSnapshot(r);
+                        }
+                        break;
+                    }
+                    case 'delete-row':
+                        if (app) {
+                            const r = parseMCP(await app.remove({ row: rowNum }));
+                            if (r) this.loadFromSnapshot(r);
+                        }
+                        break;
+                    case 'delete-col':
+                        if (app) {
+                            const r = parseMCP(await app.removeColumn({ column: colName }));
+                            if (r) this.loadFromSnapshot(r);
+                        }
+                        break;
+                    case 'fill': {
+                        const range = prompt('Range (e.g. A1:A10):');
+                        const value = prompt('Fill pattern (comma-separated):');
+                        if (range && value && app) {
+                            const r = parseMCP(await app.fill({ range, pattern: value }));
+                            if (r) this.loadFromSnapshot(r);
+                        }
+                        break;
+                    }
+                    case 'clear': {
+                        const ref = indexToCellRef(row, col);
+                        if (app) {
+                            const r = parseMCP(await app.clear({ range: ref }));
+                            if (r) this.loadFromSnapshot(r);
+                        }
+                        break;
+                    }
+                    case 'rename': {
+                        const newName = prompt(`Rename column "${colName}" to:`);
+                        if (newName && app) {
+                            const r = parseMCP(await app.rename({ column: colName, name: newName }));
+                            if (r) this.loadFromSnapshot(r);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // ── Search ──
+
+            async performSearch(query) {
+                if (!query || !query.trim()) {
+                    // Empty search — reload full data
+                    await loadDataFromPhoton();
+                    return;
+                }
+                if (!app) return;
+                try {
+                    this.updateStatus('Searching...');
+                    const result = parseMCP(await app.search({ query: query.trim() }));
+                    if (result && result.data) {
+                        this.loadFromSnapshot(result);
+                        this.updateStatus(`Found ${result.data.length} result(s) for "${query.trim()}"`);
+                    } else if (result && result.message) {
+                        this.updateStatus(result.message);
+                    }
+                } catch (err) {
+                    this.updateStatus('Search error: ' + (err.message || err));
+                }
+            }
+
+            updateStatus(msg) {
+                const el = document.getElementById('cellCount');
+                if (el) el.textContent = msg;
+                const rc = document.getElementById('recordCount');
+                if (rc) rc.textContent = `${this.rowCount} rows \u00d7 ${this.colCount} cols`;
+            }
         }
 
         const spreadsheet = new SpreadsheetEngine();
         let allTables = [];
+
+        // ── Load data from backend ──
+
+        async function loadDataFromPhoton() {
+            if (!app) return;
+            try {
+                spreadsheet.updateStatus('Loading...');
+                const result = parseMCP(await app.main());
+                if (result) {
+                    spreadsheet.loadFromSnapshot(result);
+                }
+                // Also refresh table list
+                loadTableList();
+            } catch (err) {
+                spreadsheet.updateStatus('Error: ' + (err.message || err));
+            }
+        }
 
         // ── File Picker ──
 
@@ -934,10 +1481,10 @@
                     (t.size / 1048576).toFixed(1) + ' MB';
                 const active = t.name === spreadsheet.currentTable;
                 return `<button class="picker-item" data-name="${t.name}">
-                    <div class="icon">${active ? '📝' : '📊'}</div>
+                    <div class="icon">${active ? '\uD83D\uDCDD' : '\uD83D\uDCCA'}</div>
                     <div class="info">
                         <div class="name">${t.name}</div>
-                        <div class="meta">${sizeStr} · ${timeAgo(t.modified)}</div>
+                        <div class="meta">${sizeStr} \u00b7 ${timeAgo(t.modified)}</div>
                     </div>
                 </button>`;
             }).join('');
@@ -962,14 +1509,10 @@
         }
 
         async function loadTableList() {
-            const app = window["spreadsheet"];
             if (!app) return;
             try {
                 let result = await app.list_tables();
-                if (result && result.content) {
-                    const item = result.content.find(c => c.type === "text");
-                    if (item) result = JSON.parse(item.text);
-                }
+                result = parseMCP(result);
                 if (result && result.tables) {
                     allTables = result.tables;
                     renderPickerList('');
@@ -1007,9 +1550,25 @@
 
         function setupPhotonBridge() {
             if (!window.photon) { setTimeout(setupPhotonBridge, 100); return; }
-            if (window.initMCPBridge) window.initMCPBridge(spreadsheet);
-            // Load table list on init
-            loadTableList();
+
+            // Listen for live results from any backend call (including from other clients)
+            window.photon.onResult?.((result) => {
+                const data = parseMCP(result);
+                if (data && (data.headers || data.data)) {
+                    spreadsheet.loadFromSnapshot(data);
+                }
+            });
+
+            // Listen for @stateful events
+            window.photon.onEmit?.((event) => {
+                // Refresh on any data mutation event
+                if (event && event.result && (event.result.headers || event.result.data)) {
+                    spreadsheet.loadFromSnapshot(event.result);
+                }
+            });
+
+            // Initial load
+            loadDataFromPhoton();
         }
         document.addEventListener('DOMContentLoaded', setupPhotonBridge);
     </script>
