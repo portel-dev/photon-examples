@@ -392,6 +392,38 @@
 
     .picker-footer input::placeholder { color: var(--muted); }
 
+    /* ── Find Bar ── */
+
+    .find-bar {
+      display: none;
+      grid-column: 1 / -1;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      z-index: 99;
+    }
+    .find-bar.visible { display: flex; }
+    .find-bar input {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 13px;
+      outline: none;
+    }
+    .find-bar input:focus { border-color: rgba(103,199,255,0.4); }
+    .find-bar input::placeholder { color: var(--muted); }
+    .find-bar .find-count { color: var(--muted); font-size: 12px; white-space: nowrap; min-width: 70px; }
+    .find-bar .replace-group { display: none; align-items: center; gap: 6px; }
+    .find-bar .replace-group.visible { display: flex; }
+
+    .find-highlight { background: rgba(255, 230, 0, 0.45); border-radius: 2px; }
+    .find-highlight.current { background: rgba(255, 150, 0, 0.65); }
+
     @media (max-width: 900px) {
       body { grid-template-columns: 1fr; }
       .sidebar { display: none; }
@@ -407,8 +439,23 @@
     <span class="save-indicator" id="save-indicator"></span>
     <span class="stats" id="doc-stats"></span>
     <span class="tb-sep"></span>
+    <button class="tb-btn" id="find-btn">Find</button>
     <button class="tb-btn" id="source-btn">Source</button>
     <button class="tb-btn primary" id="save-btn">Save</button>
+  </div>
+
+  <div class="find-bar" id="find-bar">
+    <input type="text" id="find-input" placeholder="Find..." style="width:200px;">
+    <span class="find-count" id="find-count"></span>
+    <button class="tb-btn" id="find-next-btn">Next</button>
+    <button class="tb-btn" id="find-prev-btn">Prev</button>
+    <button class="tb-btn" id="toggle-replace-btn">Replace</button>
+    <div class="replace-group" id="replace-group">
+      <input type="text" id="replace-input" placeholder="Replace with..." style="width:200px;">
+      <button class="tb-btn" id="replace-btn">Replace</button>
+      <button class="tb-btn" id="replace-all-btn">Replace All</button>
+    </div>
+    <button class="tb-btn" id="find-close-btn" style="margin-left:auto;">Close</button>
   </div>
 
   <aside class="sidebar">
@@ -718,6 +765,27 @@
       if (block) {
         // Re-render this block
         el.innerHTML = blockToHTML(block);
+
+        // Use section editing via edit() if we can identify the section heading
+        const headingText = findSectionHeading(idx);
+        if (headingText && docsApp) {
+          const sectionMd = collectSectionMarkdown(headingText);
+          docsApp.edit({ section: headingText, markdown: sectionMd }).then(r => {
+            const data = parseMCP(r);
+            if (data && data.markdown) {
+              state = data;
+              updateTitle(data);
+              renderOutline(data.outline);
+              refreshStats();
+            }
+          }).catch(() => {
+            // Fallback: full save
+            scheduleAutoSave();
+          });
+          // Re-attach click handler and return (edit() handles save)
+          el.addEventListener('click', () => startInlineEdit(el));
+          return;
+        }
       } else if (el._originalHTML) {
         el.innerHTML = el._originalHTML;
       }
@@ -749,6 +817,7 @@
           ? document.getElementById("source-editor").value
           : rebuildMarkdown();
         await doSave(markdown);
+        refreshStats();
       }, 1500);
     }
 
@@ -911,21 +980,13 @@
     async function openDoc(file) {
       hidePicker();
       if (!docsApp) return;
-      // Switch instance by calling main on the new file via photon bridge
-      // The instance name is embedded in the MCP routing, so we use _use pattern
-      // For now, call read which returns the doc content
-      // Actually the photon instance model means we need to signal a doc switch
-      // We'll use the list approach: load the file's markdown directly
-      // The simplest approach: tell the backend to save current, then re-init
       if (window.photon?.switchInstance) {
         await window.photon.switchInstance(file.replace(/\.md$/i, ''));
-        const result = parseMCP(await docsApp.main());
-        updateUI(result);
-      } else {
-        // Fallback: just load via main
-        const result = parseMCP(await docsApp.main());
-        updateUI(result);
       }
+      const result = parseMCP(await docsApp.main());
+      updateUI(result);
+      await loadDocList();
+      refreshStats();
     }
 
     async function createDoc(name) {
@@ -958,6 +1019,153 @@
       } catch (e) { /* ignore */ }
     }
 
+    // ── Find Bar ──
+
+    let findMatches = [];
+    let findCurrentIdx = -1;
+
+    function showFindBar() {
+      document.getElementById("find-bar").classList.add('visible');
+      document.getElementById("find-input").focus();
+    }
+
+    function hideFindBar() {
+      document.getElementById("find-bar").classList.remove('visible');
+      document.getElementById("replace-group").classList.remove('visible');
+      clearFindHighlights();
+      findMatches = [];
+      findCurrentIdx = -1;
+      document.getElementById("find-count").textContent = '';
+    }
+
+    function clearFindHighlights() {
+      document.querySelectorAll('.find-highlight').forEach(el => {
+        const parent = el.parentNode;
+        parent.replaceChild(document.createTextNode(el.textContent), el);
+        parent.normalize();
+      });
+    }
+
+    async function doFind(query) {
+      clearFindHighlights();
+      findMatches = [];
+      findCurrentIdx = -1;
+      const countEl = document.getElementById("find-count");
+
+      if (!query) { countEl.textContent = ''; return; }
+
+      // Call backend find for validation
+      if (docsApp) {
+        try { parseMCP(await docsApp.find({ query })); } catch {}
+      }
+
+      // Highlight in preview DOM
+      const preview = document.getElementById("preview");
+      const walker = document.createTreeWalker(preview, NodeFilter.SHOW_TEXT, null);
+      const textNodes = [];
+      while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+      const queryLower = query.toLowerCase();
+      for (const node of textNodes) {
+        const text = node.textContent;
+        const idx = text.toLowerCase().indexOf(queryLower);
+        if (idx === -1) continue;
+
+        const before = text.substring(0, idx);
+        const match = text.substring(idx, idx + query.length);
+        const after = text.substring(idx + query.length);
+
+        const span = document.createElement('span');
+        span.className = 'find-highlight';
+        span.textContent = match;
+
+        const parent = node.parentNode;
+        if (before) parent.insertBefore(document.createTextNode(before), node);
+        parent.insertBefore(span, node);
+        if (after) parent.insertBefore(document.createTextNode(after), node);
+        parent.removeChild(node);
+
+        findMatches.push(span);
+      }
+
+      countEl.textContent = findMatches.length ? `${findMatches.length} found` : 'No results';
+      if (findMatches.length) navigateFind(0);
+    }
+
+    function navigateFind(idx) {
+      if (!findMatches.length) return;
+      if (findCurrentIdx >= 0 && findCurrentIdx < findMatches.length) {
+        findMatches[findCurrentIdx].classList.remove('current');
+      }
+      findCurrentIdx = ((idx % findMatches.length) + findMatches.length) % findMatches.length;
+      findMatches[findCurrentIdx].classList.add('current');
+      findMatches[findCurrentIdx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById("find-count").textContent = `${findCurrentIdx + 1} of ${findMatches.length}`;
+    }
+
+    async function doReplace(all) {
+      const pattern = document.getElementById("find-input").value;
+      const replacement = document.getElementById("replace-input").value;
+      if (!pattern || !docsApp) return;
+
+      try {
+        const result = parseMCP(await docsApp.replace({ pattern, replacement, all: !!all }));
+        if (result && result.markdown) {
+          updateUI(result);
+          // Re-run find to update highlights
+          await doFind(all ? '' : pattern);
+        }
+      } catch {}
+    }
+
+    // ── Stats Refresh ──
+
+    async function refreshStats() {
+      if (!docsApp) return;
+      try {
+        const data = parseMCP(await docsApp.stats());
+        if (data && !data.error) {
+          const el = document.getElementById("doc-stats");
+          el.textContent = `${data.words || 0} words · ${data.readingTime || 1} min · ${data.headings || data.sections || 0} sections`;
+        }
+      } catch {}
+    }
+
+    // ── Section Editing via edit() ──
+
+    function findSectionHeading(blockIdx) {
+      const preview = document.getElementById("preview");
+      const blocks = preview._blocks;
+      if (!blocks) return null;
+      // Walk backwards from blockIdx to find the nearest heading
+      for (let i = blockIdx; i >= 0; i--) {
+        if (blocks[i].type === 'heading') return blocks[i].text;
+      }
+      return null;
+    }
+
+    function collectSectionMarkdown(headingText) {
+      const preview = document.getElementById("preview");
+      const blocks = preview._blocks;
+      if (!blocks) return '';
+      let collecting = false;
+      let headingLevel = 0;
+      const parts = [];
+      for (const b of blocks) {
+        if (b.type === 'heading' && b.text === headingText) {
+          collecting = true;
+          headingLevel = b.level;
+          parts.push(b.raw);
+          continue;
+        }
+        if (collecting) {
+          if (b.type === 'heading' && b.level <= headingLevel) break;
+          parts.push(b.raw);
+        }
+      }
+      return parts.join('\n\n');
+    }
+
     // ── Event Handlers ──
 
     document.getElementById("save-btn").addEventListener("click", async () => {
@@ -966,10 +1174,29 @@
         ? document.getElementById("source-editor").value
         : rebuildMarkdown();
       await doSave(markdown);
+      refreshStats();
     });
 
     document.getElementById("source-btn").addEventListener("click", toggleSourceMode);
     document.getElementById("docs-btn").addEventListener("click", showPicker);
+    document.getElementById("find-btn").addEventListener("click", showFindBar);
+    document.getElementById("find-close-btn").addEventListener("click", hideFindBar);
+
+    document.getElementById("find-input").addEventListener("input", (e) => {
+      doFind(e.target.value);
+    });
+    document.getElementById("find-next-btn").addEventListener("click", () => {
+      navigateFind(findCurrentIdx + 1);
+    });
+    document.getElementById("find-prev-btn").addEventListener("click", () => {
+      navigateFind(findCurrentIdx - 1);
+    });
+    document.getElementById("toggle-replace-btn").addEventListener("click", () => {
+      document.getElementById("replace-group").classList.toggle('visible');
+      document.getElementById("replace-input").focus();
+    });
+    document.getElementById("replace-btn").addEventListener("click", () => doReplace(false));
+    document.getElementById("replace-all-btn").addEventListener("click", () => doReplace(true));
 
     // Source editor auto-save
     document.getElementById("source-editor").addEventListener("input", () => {
@@ -982,8 +1209,16 @@
         e.preventDefault();
         document.getElementById("save-btn").click();
       }
-      if (e.key === 'Escape' && document.getElementById("picker-overlay").classList.contains('visible')) {
-        hidePicker();
+      if ((e.metaKey || e.ctrlKey) && e.key === "f") {
+        e.preventDefault();
+        showFindBar();
+      }
+      if (e.key === 'Escape') {
+        if (document.getElementById("find-bar").classList.contains('visible')) {
+          hideFindBar();
+        } else if (document.getElementById("picker-overlay").classList.contains('visible')) {
+          hidePicker();
+        }
       }
     });
 
@@ -1030,7 +1265,11 @@
       docsApp.main().then(r => {
         updateUI(parseMCP(r));
         loadDocList();
+        refreshStats();
       });
+
+      // Periodic stats refresh (every 30s)
+      setInterval(refreshStats, 30000);
     }
   </script>
 </body>
