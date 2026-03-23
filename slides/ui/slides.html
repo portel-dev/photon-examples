@@ -125,6 +125,22 @@
 
     .props-panel.hidden { display: none; }
 
+    .props-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .props-group:last-child { border-bottom: none; }
+
+    .props-group-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
     .props-section {
       display: flex;
       flex-direction: column;
@@ -688,44 +704,40 @@
 
     <!-- Properties Panel (Keynote-style right sidebar) -->
     <div class="props-panel" id="props-panel">
-      <div class="props-section">
-        <div class="props-label">Layout</div>
-        <select class="props-select" id="layout-select">
-          <option value="">Current</option>
-          <option value="title">Title Slide</option>
-          <option value="bullets">Bullets</option>
-          <option value="image-right">Image + Text</option>
-          <option value="two-col">Two Columns</option>
-          <option value="quote">Quote</option>
-          <option value="blank">Blank</option>
-        </select>
+      <div class="props-group">
+        <div class="props-group-title">Deck</div>
+        <div class="props-section">
+          <div class="props-label">Theme</div>
+          <select class="props-select" id="theme-select">
+            <option value="default">Default</option>
+            <option value="gaia">Gaia</option>
+            <option value="uncover">Uncover</option>
+          </select>
+        </div>
       </div>
 
-      <div class="props-section">
-        <div class="props-label">Theme</div>
-        <select class="props-select" id="theme-select">
-          <option value="default">Default</option>
-          <option value="gaia">Gaia</option>
-          <option value="uncover">Uncover</option>
-        </select>
-      </div>
-
-      <div class="props-section">
-        <div class="props-label">Transition</div>
-        <select class="props-select" id="transition-select">
-          <option value="fade">Fade</option>
-          <option value="slide">Slide</option>
-          <option value="scale">Scale</option>
-          <option value="zoom">Zoom</option>
-          <option value="none">None</option>
-        </select>
-      </div>
-
-      <div class="props-section">
-        <div class="props-label">Slide Info</div>
-        <div class="props-info" id="props-info">
-          <div class="props-row"><span>Slide</span><span id="props-slide-num">1</span></div>
-          <div class="props-row"><span>Total</span><span id="props-slide-total">1</span></div>
+      <div class="props-group">
+        <div class="props-group-title">Slide <span id="props-slide-num">1</span> of <span id="props-slide-total">1</span></div>
+        <div class="props-section">
+          <div class="props-label">Layout</div>
+          <select class="props-select" id="layout-select">
+            <option value="title">Title Slide</option>
+            <option value="bullets">Bullets</option>
+            <option value="image-right">Image + Text</option>
+            <option value="two-col">Two Columns</option>
+            <option value="quote">Quote</option>
+            <option value="blank">Blank</option>
+          </select>
+        </div>
+        <div class="props-section">
+          <div class="props-label">Transition</div>
+          <select class="props-select" id="transition-select">
+            <option value="fade">Fade</option>
+            <option value="slide">Slide</option>
+            <option value="scale">Scale</option>
+            <option value="zoom">Zoom</option>
+            <option value="none">None</option>
+          </select>
         </div>
       </div>
     </div>
@@ -950,6 +962,19 @@
       if (propsNum) propsNum.textContent = currentIdx + 1;
       if (propsTotal) propsTotal.textContent = slides.length;
 
+      // Detect current layout from markdown
+      const md = slides[currentIdx]?.markdown || '';
+      const layoutSel = document.getElementById("layout-select");
+      if (layoutSel) {
+        if (/^#\s+.+\n###\s+/m.test(md)) layoutSel.value = 'title';
+        else if (/^>\s+"/m.test(md)) layoutSel.value = 'quote';
+        else if (/display:\s*flex/i.test(md) || /two-col|split/i.test(md)) layoutSel.value = 'two-col';
+        else if (/!\[bg\s+right/i.test(md)) layoutSel.value = 'image-right';
+        else if (/^[-*]\s+/m.test(md)) layoutSel.value = 'bullets';
+        else if (md.trim() === '') layoutSel.value = 'blank';
+        else layoutSel.value = 'bullets';
+      }
+
       // Update transition dropdown
       document.getElementById("transition-select").value = slides[currentIdx]?.transition || "fade";
     }
@@ -1098,7 +1123,7 @@
       title: '# Presentation Title\n### Subtitle or author name',
       bullets: '## Section Title\n\n- First point\n- Second point\n- Third point\n- Fourth point',
       'image-right': '![bg right](https://picsum.photos/800/600)\n\n## Image & Text\n\nDescribe the image or add context here.',
-      'two-col': '![bg left:50%](#)\n\n## Left Content\n\nWrite here — the left half is a colored background.\n\nThe right half shows this text.',
+      'two-col': '<div style="display:flex;gap:40px;"><div style="flex:1;">\n\n## Left Column\n\nContent for the left side.\n\n</div><div style="flex:1;">\n\n## Right Column\n\nContent for the right side.\n\n</div></div>',
       quote: '> "The best way to predict the future is to invent it."\n>\n> — Alan Kay',
       blank: '\n',
     };
