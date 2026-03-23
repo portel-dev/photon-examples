@@ -1013,8 +1013,15 @@
       let content = newMarkdown;
       if (newNotes) content += `\n\n<!-- notes: ${newNotes} -->`;
 
-      // Use per-slide edit endpoint
-      slidesApp.edit({ index: currentIdx, markdown: content }).then(r => {
+      // Save full deck — more reliable than per-slide edit
+      const slideContents = slides.map((s, i) => {
+        let c = (i === currentIdx) ? content : s.markdown;
+        if (s.notes && i !== currentIdx) c += `\n\n<!-- notes: ${s.notes} -->`;
+        else if (newNotes && i === currentIdx) c += `\n\n<!-- notes: ${newNotes} -->`;
+        return c;
+      });
+      const fullMd = frontmatter + slideContents.join("\n\n---\n\n");
+      slidesApp.save({ markdown: fullMd }).then(r => {
         const data = parseMCP(r);
         if (data && data.html) {
           marpCSS = data.css || marpCSS;
@@ -1140,7 +1147,7 @@
         editorDirty = true;
         await saveCurrentSlide();
       }
-      e.target.value = ''; // Reset dropdown to "Layout" label
+      // Don't reset — show current layout selection
     });
 
     // ── Presentation Mode ──
