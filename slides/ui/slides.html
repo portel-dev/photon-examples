@@ -80,6 +80,8 @@
     .tb-btn.primary:hover { background: rgba(103,199,255,0.25); }
     .tb-btn:disabled { opacity: 0.3; cursor: default; }
 
+    .tb-icon { font-size: 16px; padding: 4px 10px; min-width: 34px; text-align: center; }
+
     .tb-select {
       background: rgba(255,255,255,0.06);
       border: 1px solid var(--line);
@@ -471,10 +473,8 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
       overflow: hidden;
       aspect-ratio: 16/9;
-      max-width: 100%;
+      width: 100%;
       max-height: 100%;
-      width: auto;
-      height: auto;
       position: relative;
     }
 
@@ -671,20 +671,20 @@
     <div class="ai-dot"></div>
     <span class="deck-name" id="deck-name">Slides</span>
 
-    <button class="tb-btn" id="decks-btn" title="Switch deck">📂</button>
+    <button class="tb-btn tb-icon" id="decks-btn" title="Switch deck">📂</button>
     <div class="tb-sep"></div>
-    <button class="tb-btn" id="add-btn" title="Add slide">＋</button>
-    <button class="tb-btn" id="dup-btn" title="Duplicate slide">⧉</button>
-    <button class="tb-btn" id="del-btn" title="Delete slide">🗑</button>
+    <button class="tb-btn tb-icon" id="add-btn" title="Add slide">＋</button>
+    <button class="tb-btn tb-icon" id="dup-btn" title="Duplicate slide">⧉</button>
+    <button class="tb-btn tb-icon" id="del-btn" title="Delete slide">🗑</button>
 
     <div style="flex:1;"></div>
 
-    <button class="tb-btn" id="prev-btn" title="Previous slide">◂</button>
+    <button class="tb-btn tb-icon" id="prev-btn" title="Previous slide">◂</button>
     <span class="slide-counter" id="slide-counter" style="font-size:12px;color:var(--muted);min-width:50px;text-align:center;"></span>
-    <button class="tb-btn" id="next-btn" title="Next slide">▸</button>
+    <button class="tb-btn tb-icon" id="next-btn" title="Next slide">▸</button>
     <div class="tb-sep"></div>
-    <button class="tb-btn" id="props-toggle" title="Toggle properties">⚙</button>
-    <button class="tb-btn primary" id="present-btn" title="Present">▶</button>
+    <button class="tb-btn tb-icon" id="props-toggle" title="Toggle properties">⚙</button>
+    <button class="tb-btn tb-icon primary" id="present-btn" title="Present">▶</button>
   </div>
 
   <!-- ══ Authoring View ══ -->
