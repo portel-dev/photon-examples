@@ -46,6 +46,7 @@
       gap: 8px;
       flex-shrink: 0;
       z-index: 100;
+      overflow-x: auto;
     }
 
     .toolbar .deck-name {
@@ -185,6 +186,25 @@
     }
 
     .deck-picker.hidden { display: none; }
+
+    .deck-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    .deck-close:hover { background: rgba(255,255,255,0.1); }
 
     .deck-picker h2 {
       font-size: 1.6rem;
@@ -459,7 +479,8 @@
 <body>
 
   <!-- ══ Deck Picker ══ -->
-  <div class="deck-picker" id="deck-picker">
+  <div class="deck-picker hidden" id="deck-picker">
+    <button class="deck-close" id="deck-close-btn" title="Back to editor">&times;</button>
     <h2>Slides</h2>
     <p class="subtitle">Choose a deck or create a new one</p>
     <div class="deck-grid" id="deck-grid"></div>
@@ -1053,6 +1074,10 @@
     function hideDeckPicker() {
       document.getElementById("deck-picker").classList.add("hidden");
     }
+
+    document.getElementById("deck-close-btn").addEventListener("click", () => {
+      if (deckLoaded) hideDeckPicker();
+    });
 
     async function openDeck(instance) {
       if (!slidesApp) return;
