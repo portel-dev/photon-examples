@@ -4,6 +4,19 @@
  * Each instance is a deck: `_use('quarterly-review')` → `quarterly-review.md`.
  * Pass a full path to open any markdown file: `_use('/path/to/deck.md')`.
  *
+ * ## UI Promises
+ *
+ * - Filmstrip sidebar with slide thumbnails — click to select
+ * - Drag thumbnails to reorder slides (calls `move()`)
+ * - Main slide preview scales to fill available space, including fullscreen
+ * - Markdown editor for the selected slide with live preview
+ * - Speaker notes editor tab below the markdown editor
+ * - Theme selector dropdown: default, gaia, uncover (updates Marp frontmatter)
+ * - Toolbar: Add Slide, Delete, Duplicate, Fullscreen Present
+ * - Deck picker overlay: browse existing decks, create new ones, search
+ * - Per-slide editing via `edit()` — not full-document save
+ * - Keyboard shortcuts: arrow keys navigate, Escape exits fullscreen
+ *
  * @version 1.0.0
  * @runtime ^1.14.0
  * @dependencies @marp-team/marp-core@^4.3.0

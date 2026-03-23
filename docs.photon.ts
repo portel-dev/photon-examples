@@ -8,6 +8,20 @@
  * Features page-aware preview via Paged.js, TOC generation, footnotes,
  * custom containers (note/warning/tip), multi-column layouts, and PDF export.
  *
+ * ## UI Promises
+ *
+ * - Preview-first editor: click any element to edit it inline
+ * - Source mode toggle for raw markdown editing
+ * - Document picker overlay: browse, search, and create documents (calls `list()`)
+ * - Sidebar outline: click headings to scroll to them in preview
+ * - Sidebar document list for quick switching between files
+ * - Find bar: search text in document (calls `find()`)
+ * - Find-and-replace: search and replace text (calls `replace()`)
+ * - Section editing: edit by heading path (calls `edit()`)
+ * - Auto-save with debounced 1.5s delay and save indicator
+ * - Word count, reading time, section stats in toolbar (calls `stats()`)
+ * - Keyboard shortcut: Cmd/Ctrl+S to save
+ *
  * @version 1.0.0
  * @runtime ^1.14.0
  * @tags document, markdown, pdf, writing, authoring

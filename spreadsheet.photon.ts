@@ -6,6 +6,20 @@
  * to CSV files: `_use('budget')` → `budget.csv` in your spreadsheets folder.
  * Pass a full path to open any CSV: `_use('/path/to/data.csv')`.
  *
+ * ## UI Promises
+ *
+ * - Editable grid: click cell to edit, formulas evaluate on save (calls `set()`)
+ * - Formula bar showing selected cell reference and value
+ * - File picker overlay: browse, search, create spreadsheets (calls `list_tables()`)
+ * - Add/remove rows and columns via toolbar buttons (calls `insertRow()`, `insertColumn()`, `remove()`, `removeColumn()`)
+ * - Column header rename via right-click context menu (calls `rename()`)
+ * - CSV import: paste or upload CSV data (calls `ingest()`)
+ * - CSV export: download current sheet (calls `dump()`)
+ * - Sheet tabs for switching between tables
+ * - Cell range selection with keyboard navigation
+ * - Context menu: insert/delete rows/columns, fill range, clear cell
+ * - Initial data load from backend (calls `main()` or `view()`)
+ *
  * @version 1.1.0
  * @runtime ^1.14.0
  * @tags spreadsheet, csv, formulas, data
