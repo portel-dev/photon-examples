@@ -709,9 +709,11 @@
         <div class="props-section">
           <div class="props-label">Theme</div>
           <select class="props-select" id="theme-select">
-            <option value="default">Default</option>
-            <option value="gaia">Gaia</option>
-            <option value="uncover">Uncover</option>
+            <option value="photon-light">Light</option>
+            <option value="photon-dark">Dark</option>
+            <option value="default">Marp Default</option>
+            <option value="gaia">Marp Gaia</option>
+            <option value="uncover">Marp Uncover</option>
           </select>
         </div>
       </div>
@@ -721,11 +723,15 @@
         <div class="props-section">
           <div class="props-label">Layout</div>
           <select class="props-select" id="layout-select">
-            <option value="title">Title Slide</option>
+            <option value="lead">Title (centered)</option>
             <option value="bullets">Bullets</option>
-            <option value="image-right">Image + Text</option>
-            <option value="two-col">Two Columns</option>
-            <option value="quote">Quote</option>
+            <option value="cols-2">Two Columns</option>
+            <option value="cols-3">Three Columns</option>
+            <option value="img-left">Image Left</option>
+            <option value="img-right">Image Right</option>
+            <option value="quote-big">Quote</option>
+            <option value="accent">Accent Background</option>
+            <option value="invert">Inverted</option>
             <option value="blank">Blank</option>
           </select>
         </div>
@@ -962,17 +968,22 @@
       if (propsNum) propsNum.textContent = currentIdx + 1;
       if (propsTotal) propsTotal.textContent = slides.length;
 
-      // Detect current layout from markdown
+      // Detect current layout from _class directive or markdown structure
       const md = slides[currentIdx]?.markdown || '';
       const layoutSel = document.getElementById("layout-select");
       if (layoutSel) {
-        if (/^#\s+.+\n###\s+/m.test(md)) layoutSel.value = 'title';
-        else if (/^>\s+"/m.test(md)) layoutSel.value = 'quote';
-        else if (/display:\s*flex/i.test(md) || /two-col|split/i.test(md)) layoutSel.value = 'two-col';
-        else if (/!\[bg\s+right/i.test(md)) layoutSel.value = 'image-right';
-        else if (/^[-*]\s+/m.test(md)) layoutSel.value = 'bullets';
-        else if (md.trim() === '') layoutSel.value = 'blank';
-        else layoutSel.value = 'bullets';
+        const classMatch = md.match(/<!--\s*_class:\s*(\S+)/);
+        if (classMatch) {
+          layoutSel.value = classMatch[1];
+        } else if (/^#\s+.+\n+###\s+/m.test(md)) {
+          layoutSel.value = 'lead';
+        } else if (/^>\s+/m.test(md)) {
+          layoutSel.value = 'quote-big';
+        } else if (md.trim() === '') {
+          layoutSel.value = 'blank';
+        } else {
+          layoutSel.value = 'bullets';
+        }
       }
 
       // Update transition dropdown
@@ -1126,28 +1137,49 @@
 
     // ── Layout Picker ──
 
-    const LAYOUTS = {
-      title: '# Presentation Title\n### Subtitle or author name',
-      bullets: '## Section Title\n\n- First point\n- Second point\n- Third point\n- Fourth point',
-      'image-right': '![bg right](https://picsum.photos/800/600)\n\n## Image & Text\n\nDescribe the image or add context here.',
-      'two-col': '<div style="display:flex;gap:40px;"><div style="flex:1;">\n\n## Left Column\n\nContent for the left side.\n\n</div><div style="flex:1;">\n\n## Right Column\n\nContent for the right side.\n\n</div></div>',
-      quote: '> "The best way to predict the future is to invent it."\n>\n> — Alan Kay',
+    // Layout templates — used when creating new slides with a layout
+    const LAYOUT_TEMPLATES = {
+      lead: '# Title\n### Subtitle',
+      bullets: '## Section Title\n\n- First point\n- Second point\n- Third point',
+      'cols-2': '## Left Column\n\nContent here.\n\n## Right Column\n\nContent here.',
+      'cols-3': '## One\n\nFirst.\n\n## Two\n\nSecond.\n\n## Three\n\nThird.',
+      'img-left': '![](https://picsum.photos/600/400)\n\n## Title\n\nDescription text.',
+      'img-right': '## Title\n\nDescription text.\n\n![](https://picsum.photos/600/400)',
+      'quote-big': '> "The best way to predict the future is to invent it."\n\n— Alan Kay',
+      accent: '# Highlighted Slide\n\nThis slide uses the accent color.',
+      invert: '# Inverted Slide\n\nLight text on dark background.',
       blank: '\n',
     };
 
     document.getElementById("layout-select").addEventListener("change", async (e) => {
       const layout = e.target.value;
-      if (!layout || !LAYOUTS[layout]) { e.target.value = ''; return; }
+      if (!layout || !slides[currentIdx]) return;
 
-      const newMd = LAYOUTS[layout];
-      // Update current slide's markdown
-      if (slides[currentIdx]) {
-        slides[currentIdx].markdown = newMd;
-        document.getElementById("editor").value = newMd;
-        editorDirty = true;
-        await saveCurrentSlide();
+      let md = slides[currentIdx].markdown || '';
+
+      // Remove existing _class directive
+      md = md.replace(/<!--\s*_class:\s*[^>]*-->\s*\n?/g, '');
+
+      // Add new _class directive (skip for 'bullets' which is default, no class needed)
+      if (layout !== 'bullets' && layout !== 'blank') {
+        md = `<!-- _class: ${layout} -->\n\n` + md.trim();
       }
-      // Don't reset — show current layout selection
+
+      // If slide is empty/new, use template content
+      const stripped = md.replace(/<!--[^>]*-->\s*/g, '').trim();
+      if (!stripped) {
+        const template = LAYOUT_TEMPLATES[layout] || '';
+        if (layout !== 'bullets' && layout !== 'blank') {
+          md = `<!-- _class: ${layout} -->\n\n` + template;
+        } else {
+          md = template;
+        }
+      }
+
+      slides[currentIdx].markdown = md;
+      document.getElementById("editor").value = md;
+      editorDirty = true;
+      await saveCurrentSlide();
     });
 
     // ── Presentation Mode ──
