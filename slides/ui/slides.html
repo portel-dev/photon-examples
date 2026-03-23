@@ -109,6 +109,69 @@
       overflow: hidden;
     }
 
+    /* ── Properties Panel (Keynote-style right sidebar) ── */
+
+    .props-panel {
+      width: 220px;
+      background: var(--surface);
+      border-left: 1px solid var(--line);
+      flex-shrink: 0;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .props-panel.hidden { display: none; }
+
+    .props-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .props-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .props-select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .props-select:focus { border-color: var(--accent); }
+    .props-select option { background: var(--surface); }
+
+    .props-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .props-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .props-row span:last-child {
+      color: var(--text);
+      font-weight: 500;
+    }
+
     /* ── Filmstrip ── */
 
     .filmstrip {
@@ -597,36 +660,9 @@
     <button class="tb-btn" id="dup-btn" title="Duplicate slide">Duplicate</button>
     <button class="tb-btn" id="del-btn" title="Delete slide">Delete</button>
 
-    <div class="tb-sep"></div>
+    <div style="flex:1;"></div>
 
-    <select class="tb-select" id="layout-select" title="Slide layout">
-      <option value="">Layout</option>
-      <option value="title">Title Slide</option>
-      <option value="bullets">Bullets</option>
-      <option value="image-right">Image + Text</option>
-      <option value="two-col">Two Columns</option>
-      <option value="quote">Quote</option>
-      <option value="blank">Blank</option>
-    </select>
-
-    <select class="tb-select" id="theme-select" title="Marp theme">
-      <option value="default">Default</option>
-      <option value="gaia">Gaia</option>
-      <option value="uncover">Uncover</option>
-    </select>
-
-    <div class="tb-sep"></div>
-
-    <select class="tb-select" id="transition-select" title="Slide transition">
-      <option value="fade">Fade</option>
-      <option value="slide">Slide</option>
-      <option value="scale">Scale</option>
-      <option value="zoom">Zoom</option>
-      <option value="none">None</option>
-    </select>
-
-    <div class="tb-sep"></div>
-
+    <button class="tb-btn" id="props-toggle" title="Toggle properties panel">⚙ Properties</button>
     <button class="tb-btn primary" id="present-btn">▶ Present</button>
   </div>
 
@@ -647,6 +683,50 @@
         </div>
         <textarea class="editor-textarea" id="editor" placeholder="Write slide content in Markdown..."></textarea>
         <textarea class="editor-textarea" id="notes-editor" placeholder="Speaker notes (only visible in presenter view)..." style="display:none;"></textarea>
+      </div>
+    </div>
+
+    <!-- Properties Panel (Keynote-style right sidebar) -->
+    <div class="props-panel" id="props-panel">
+      <div class="props-section">
+        <div class="props-label">Layout</div>
+        <select class="props-select" id="layout-select">
+          <option value="">Current</option>
+          <option value="title">Title Slide</option>
+          <option value="bullets">Bullets</option>
+          <option value="image-right">Image + Text</option>
+          <option value="two-col">Two Columns</option>
+          <option value="quote">Quote</option>
+          <option value="blank">Blank</option>
+        </select>
+      </div>
+
+      <div class="props-section">
+        <div class="props-label">Theme</div>
+        <select class="props-select" id="theme-select">
+          <option value="default">Default</option>
+          <option value="gaia">Gaia</option>
+          <option value="uncover">Uncover</option>
+        </select>
+      </div>
+
+      <div class="props-section">
+        <div class="props-label">Transition</div>
+        <select class="props-select" id="transition-select">
+          <option value="fade">Fade</option>
+          <option value="slide">Slide</option>
+          <option value="scale">Scale</option>
+          <option value="zoom">Zoom</option>
+          <option value="none">None</option>
+        </select>
+      </div>
+
+      <div class="props-section">
+        <div class="props-label">Slide Info</div>
+        <div class="props-info" id="props-info">
+          <div class="props-row"><span>Slide</span><span id="props-slide-num">1</span></div>
+          <div class="props-row"><span>Total</span><span id="props-slide-total">1</span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -864,6 +944,12 @@
       const notesEditor = document.getElementById("notes-editor");
       notesEditor.value = slides[currentIdx]?.notes || "";
 
+      // Update properties panel
+      const propsNum = document.getElementById("props-slide-num");
+      const propsTotal = document.getElementById("props-slide-total");
+      if (propsNum) propsNum.textContent = currentIdx + 1;
+      if (propsTotal) propsTotal.textContent = slides.length;
+
       // Update transition dropdown
       document.getElementById("transition-select").value = slides[currentIdx]?.transition || "fade";
     }
@@ -1012,7 +1098,7 @@
       title: '# Presentation Title\n### Subtitle or author name',
       bullets: '## Section Title\n\n- First point\n- Second point\n- Third point\n- Fourth point',
       'image-right': '![bg right](https://picsum.photos/800/600)\n\n## Image & Text\n\nDescribe the image or add context here.',
-      'two-col': '## Left Column\n\nContent for the left side.\n\n---\n\n## Right Column\n\nContent for the right side.',
+      'two-col': '![bg left:50%](#)\n\n## Left Content\n\nWrite here — the left half is a colored background.\n\nThe right half shows this text.',
       quote: '> "The best way to predict the future is to invent it."\n>\n> — Alan Kay',
       blank: '\n',
     };
@@ -1215,6 +1301,10 @@
 
     document.getElementById("deck-close-btn").addEventListener("click", () => {
       if (deckLoaded) hideDeckPicker();
+    });
+
+    document.getElementById("props-toggle").addEventListener("click", () => {
+      document.getElementById("props-panel").classList.toggle("hidden");
     });
 
     document.getElementById("deck-picker").addEventListener("click", (e) => {
