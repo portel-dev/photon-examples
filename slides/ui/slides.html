@@ -166,6 +166,9 @@
       height: 540px !important;
     }
 
+    .thumb.drag-over { border-color: var(--accent); border-style: dashed; }
+    .thumb.dragging { opacity: 0.4; }
+
     /* ── Deck Picker Overlay ── */
 
     .deck-picker {
@@ -178,6 +181,7 @@
       align-items: center;
       justify-content: center;
       gap: 24px;
+      overflow: hidden;
     }
 
     .deck-picker.hidden { display: none; }
@@ -201,8 +205,9 @@
       max-width: 700px;
       width: 100%;
       padding: 0 24px;
-      max-height: 50vh;
+      max-height: 40vh;
       overflow-y: auto;
+      flex-shrink: 0;
     }
 
     .deck-card {
@@ -375,6 +380,9 @@
     .present-mode #present-container {
       width: 100%;
       height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       position: relative;
       overflow: hidden;
     }
@@ -383,20 +391,22 @@
     .present-mode #present-container > svg {
       display: none;
       position: absolute;
-      inset: 0;
-      width: 100% !important;
-      height: 100% !important;
+      width: 1280px !important;
+      height: 720px !important;
+      transform-origin: center center;
     }
 
     .present-mode #present-container > section.active,
     .present-mode #present-container > svg.active {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .present-mode #present-container > section.active > svg,
-    .present-mode #present-container > svg.active {
-      width: 100% !important;
-      height: 100% !important;
+    .present-mode #present-container > svg.active > svg {
+      width: 1280px !important;
+      height: 720px !important;
     }
 
     .present-controls {
@@ -469,6 +479,14 @@
     <button class="tb-btn" id="add-btn" title="Add slide">+ Add</button>
     <button class="tb-btn" id="dup-btn" title="Duplicate slide">Duplicate</button>
     <button class="tb-btn" id="del-btn" title="Delete slide">Delete</button>
+
+    <div class="tb-sep"></div>
+
+    <select class="tb-select" id="theme-select" title="Marp theme">
+      <option value="default">Default</option>
+      <option value="gaia">Gaia</option>
+      <option value="uncover">Uncover</option>
+    </select>
 
     <div class="tb-sep"></div>
 
@@ -580,6 +598,13 @@
       });
 
       currentIdx = Math.min(data.current || 0, slides.length - 1);
+
+      // Sync theme dropdown from frontmatter
+      const themeMatch = frontmatter.match(/theme:\s*(\S+)/);
+      if (themeMatch) {
+        document.getElementById("theme-select").value = themeMatch[1];
+      }
+
       renderFilmstrip();
       selectSlide(currentIdx);
     }
@@ -603,6 +628,8 @@
 
     // ── Filmstrip ──
 
+    let dragFromIdx = -1;
+
     function renderFilmstrip() {
       const strip = document.getElementById("filmstrip");
       strip.innerHTML = "";
@@ -612,7 +639,47 @@
       slides.forEach((slide, i) => {
         const thumb = document.createElement("div");
         thumb.className = "thumb" + (i === currentIdx ? " selected" : "");
+        thumb.setAttribute("draggable", "true");
+        thumb.dataset.idx = i;
         thumb.onclick = () => selectSlide(i);
+
+        // Drag events
+        thumb.addEventListener("dragstart", (e) => {
+          dragFromIdx = i;
+          thumb.classList.add("dragging");
+          e.dataTransfer.effectAllowed = "move";
+        });
+        thumb.addEventListener("dragend", () => {
+          thumb.classList.remove("dragging");
+          dragFromIdx = -1;
+        });
+        thumb.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          thumb.classList.add("drag-over");
+        });
+        thumb.addEventListener("dragleave", () => {
+          thumb.classList.remove("drag-over");
+        });
+        thumb.addEventListener("drop", async (e) => {
+          e.preventDefault();
+          thumb.classList.remove("drag-over");
+          const toIdx = i;
+          if (dragFromIdx === -1 || dragFromIdx === toIdx) return;
+          if (slidesApp) {
+            const r = parseMCP(await slidesApp.move({ from: dragFromIdx, to: toIdx }));
+            if (r && r.html) {
+              loadDeck(r);
+            } else {
+              // Reorder locally if backend doesn't return full deck
+              const [moved] = slides.splice(dragFromIdx, 1);
+              slides.splice(toIdx, 0, moved);
+              currentIdx = toIdx;
+              renderFilmstrip();
+              selectSlide(toIdx);
+            }
+          }
+        });
 
         const inner = document.createElement("div");
         inner.className = "thumb-inner";
@@ -702,35 +769,30 @@
       slides[currentIdx].notes = newNotes;
       editorDirty = false;
 
-      // Rebuild full markdown and send to server
-      if (slidesApp) {
-        const slideContents = slides.map(s => {
-          let content = s.markdown;
-          if (s.notes) content += `\n\n<!-- notes: ${s.notes} -->`;
-          return content;
-        });
-        const fullMd = frontmatter + slideContents.join("\n\n---\n\n");
+      if (!slidesApp) return;
 
-        slidesApp.save({ markdown: fullMd }).then(r => {
-          const data = parseMCP(r);
-          if (data && data.html) {
-            // Re-parse to get updated HTML
-            marpCSS = data.css || marpCSS;
-            document.getElementById("marp-style").innerHTML = marpCSS;
-            const tmp = document.createElement("div");
-            tmp.innerHTML = data.html;
-            const sections = tmp.querySelectorAll(":scope > section, :scope > svg");
-            sections.forEach((el, i) => {
-              if (slides[i]) slides[i].html = el.outerHTML;
-            });
-            // Update preview and thumbnails
-            const inner = document.getElementById("preview-inner");
-            if (slides[currentIdx]) inner.innerHTML = slides[currentIdx].html;
-            scalePreview();
-            renderFilmstrip();
-          }
-        });
-      }
+      // Build per-slide content (markdown + notes)
+      let content = newMarkdown;
+      if (newNotes) content += `\n\n<!-- notes: ${newNotes} -->`;
+
+      // Use per-slide edit endpoint
+      slidesApp.edit({ index: currentIdx, markdown: content }).then(r => {
+        const data = parseMCP(r);
+        if (data && data.html) {
+          marpCSS = data.css || marpCSS;
+          document.getElementById("marp-style").innerHTML = marpCSS;
+          const tmp = document.createElement("div");
+          tmp.innerHTML = data.html;
+          const sections = tmp.querySelectorAll(":scope > section, :scope > svg");
+          sections.forEach((el, i) => {
+            if (slides[i]) slides[i].html = el.outerHTML;
+          });
+          const inner = document.getElementById("preview-inner");
+          if (slides[currentIdx]) inner.innerHTML = slides[currentIdx].html;
+          scalePreview();
+          renderFilmstrip();
+        }
+      });
     }
 
     document.getElementById("editor").addEventListener("input", () => {
@@ -794,6 +856,29 @@
       }
     });
 
+    // ── Theme Selector ──
+
+    document.getElementById("theme-select").addEventListener("change", async (e) => {
+      const theme = e.target.value;
+      // Update frontmatter with new theme
+      if (frontmatter) {
+        frontmatter = frontmatter.replace(/theme:\s*\S+/, `theme: ${theme}`);
+      } else {
+        frontmatter = `---\nmarp: true\ntheme: ${theme}\n---\n`;
+      }
+      // Rebuild full markdown and save
+      if (slidesApp) {
+        const slideContents = slides.map(s => {
+          let content = s.markdown;
+          if (s.notes) content += `\n\n<!-- notes: ${s.notes} -->`;
+          return content;
+        });
+        const fullMd = frontmatter + slideContents.join("\n\n---\n\n");
+        const r = parseMCP(await slidesApp.save({ markdown: fullMd }));
+        if (r && r.html) loadDeck(r);
+      }
+    });
+
     // ── Presentation Mode ──
 
     let presentIdx = 0;
@@ -805,6 +890,17 @@
     document.getElementById("present-exit").addEventListener("click", () => {
       exitPresentation();
     });
+
+    function scalePresentSlides() {
+      const container = document.getElementById("present-container");
+      if (!container) return;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const scale = Math.min(vw / 1280, vh / 720);
+      container.querySelectorAll(":scope > section, :scope > svg").forEach(el => {
+        el.style.transform = `scale(${scale})`;
+      });
+    }
 
     function enterPresentation() {
       const mode = document.getElementById("present-mode");
@@ -819,9 +915,17 @@
       document.getElementById("present-progress").textContent = `${presentIdx + 1} / ${slides.length}`;
       mode.classList.add("active");
 
+      scalePresentSlides();
+
       // Try fullscreen
       document.body.requestFullscreen?.().catch(() => {});
     }
+
+    window.addEventListener("resize", () => {
+      if (document.getElementById("present-mode").classList.contains("active")) {
+        scalePresentSlides();
+      }
+    });
 
     function exitPresentation() {
       document.getElementById("present-mode").classList.remove("active");
