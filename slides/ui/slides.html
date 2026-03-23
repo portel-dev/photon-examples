@@ -467,13 +467,14 @@
 
     .preview-frame {
       background: white;
-      border-radius: 8px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      border-radius: 6px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
       overflow: hidden;
-      width: 100%;
-      height: 100%;
-      max-width: calc((100vh - var(--toolbar-h) - 200px - 40px) * 16 / 9);
       aspect-ratio: 16/9;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
       position: relative;
     }
 
@@ -670,16 +671,20 @@
     <div class="ai-dot"></div>
     <span class="deck-name" id="deck-name">Slides</span>
 
-    <button class="tb-btn" id="decks-btn" title="Switch deck">📂 Decks</button>
+    <button class="tb-btn" id="decks-btn" title="Switch deck">📂</button>
     <div class="tb-sep"></div>
-    <button class="tb-btn" id="add-btn" title="Add slide">+ Add</button>
-    <button class="tb-btn" id="dup-btn" title="Duplicate slide">Duplicate</button>
-    <button class="tb-btn" id="del-btn" title="Delete slide">Delete</button>
+    <button class="tb-btn" id="add-btn" title="Add slide">＋</button>
+    <button class="tb-btn" id="dup-btn" title="Duplicate slide">⧉</button>
+    <button class="tb-btn" id="del-btn" title="Delete slide">🗑</button>
 
     <div style="flex:1;"></div>
 
-    <button class="tb-btn" id="props-toggle" title="Toggle properties panel">⚙ Properties</button>
-    <button class="tb-btn primary" id="present-btn">▶ Present</button>
+    <button class="tb-btn" id="prev-btn" title="Previous slide">◂</button>
+    <span class="slide-counter" id="slide-counter" style="font-size:12px;color:var(--muted);min-width:50px;text-align:center;"></span>
+    <button class="tb-btn" id="next-btn" title="Next slide">▸</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="props-toggle" title="Toggle properties">⚙</button>
+    <button class="tb-btn primary" id="present-btn" title="Present">▶</button>
   </div>
 
   <!-- ══ Authoring View ══ -->
@@ -704,20 +709,6 @@
 
     <!-- Properties Panel (Keynote-style right sidebar) -->
     <div class="props-panel" id="props-panel">
-      <div class="props-group">
-        <div class="props-group-title">Deck</div>
-        <div class="props-section">
-          <div class="props-label">Theme</div>
-          <select class="props-select" id="theme-select">
-            <option value="photon-light">Light</option>
-            <option value="photon-dark">Dark</option>
-            <option value="default">Marp Default</option>
-            <option value="gaia">Marp Gaia</option>
-            <option value="uncover">Marp Uncover</option>
-          </select>
-        </div>
-      </div>
-
       <div class="props-group">
         <div class="props-group-title">Slide <span id="props-slide-num">1</span> of <span id="props-slide-total">1</span></div>
         <div class="props-section">
@@ -823,12 +814,6 @@
       });
 
       currentIdx = Math.min(data.current || 0, slides.length - 1);
-
-      // Sync theme dropdown from frontmatter
-      const themeMatch = frontmatter.match(/theme:\s*(\S+)/);
-      if (themeMatch) {
-        document.getElementById("theme-select").value = themeMatch[1];
-      }
 
       renderFilmstrip();
       selectSlide(currentIdx);
@@ -962,11 +947,13 @@
       const notesEditor = document.getElementById("notes-editor");
       notesEditor.value = slides[currentIdx]?.notes || "";
 
-      // Update properties panel
+      // Update properties panel and toolbar counter
       const propsNum = document.getElementById("props-slide-num");
       const propsTotal = document.getElementById("props-slide-total");
       if (propsNum) propsNum.textContent = currentIdx + 1;
       if (propsTotal) propsTotal.textContent = slides.length;
+      const counter = document.getElementById("slide-counter");
+      if (counter) counter.textContent = `${currentIdx + 1} / ${slides.length}`;
 
       // Detect current layout from _class directive or markdown structure
       const md = slides[currentIdx]?.markdown || '';
@@ -1106,32 +1093,17 @@
       showDeckPicker();
     });
 
+    document.getElementById("prev-btn").addEventListener("click", () => {
+      if (currentIdx > 0) selectSlide(currentIdx - 1);
+    });
+
+    document.getElementById("next-btn").addEventListener("click", () => {
+      if (currentIdx < slides.length - 1) selectSlide(currentIdx + 1);
+    });
+
     document.getElementById("transition-select").addEventListener("change", (e) => {
       if (slides[currentIdx]) {
         slides[currentIdx].transition = e.target.value;
-      }
-    });
-
-    // ── Theme Selector ──
-
-    document.getElementById("theme-select").addEventListener("change", async (e) => {
-      const theme = e.target.value;
-      // Update frontmatter with new theme
-      if (frontmatter) {
-        frontmatter = frontmatter.replace(/theme:\s*\S+/, `theme: ${theme}`);
-      } else {
-        frontmatter = `---\nmarp: true\ntheme: ${theme}\n---\n`;
-      }
-      // Rebuild full markdown and save
-      if (slidesApp) {
-        const slideContents = slides.map(s => {
-          let content = s.markdown;
-          if (s.notes) content += `\n\n<!-- notes: ${s.notes} -->`;
-          return content;
-        });
-        const fullMd = frontmatter + slideContents.join("\n\n---\n\n");
-        const r = parseMCP(await slidesApp.save({ markdown: fullMd }));
-        if (r && r.html) loadDeck(r);
       }
     });
 
