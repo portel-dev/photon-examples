@@ -103,7 +103,7 @@ main() {
   </div>
   <div>
     <p style="font-size:0.85em;opacity:0.7;margin:0 0 8px;">Live — try it:</p>
-    <div data-embed="walkthrough/greet" data-embed-height="260"></div>
+    <div data-embed="walkthrough/greet" data-embed-params='{"name":"World"}' data-embed-height="260"></div>
   </div>
 </div>
 
@@ -136,7 +136,7 @@ main() {
   </div>
   <div>
     <p style="font-size:0.85em;opacity:0.7;margin:0 0 8px;">Live — Beam auto-generates this form:</p>
-    <div data-embed="walkthrough/add" data-embed-height="300"></div>
+    <div data-embed="walkthrough/add" data-embed-params='{"a":5,"b":3}' data-embed-height="300"></div>
   </div>
 </div>
 
@@ -272,7 +272,7 @@ register({ email, birthday, role, bio }: {
   </div>
   <div>
     <p style="font-size:0.85em;opacity:0.7;margin:0 0 8px;">Live — specialized input widgets:</p>
-    <div data-embed="walkthrough/register" data-embed-height="340"></div>
+    <div data-embed="walkthrough/register" data-embed-view="form" data-embed-height="340"></div>
   </div>
 </div>
 
