@@ -272,7 +272,7 @@ register({ email, birthday, role, bio }: {
   </div>
   <div>
     <p style="font-size:0.85em;opacity:0.7;margin:0 0 8px;">Live — specialized input widgets:</p>
-    <div data-embed="walkthrough/register" data-embed-view="form" data-embed-height="340"></div>
+    <div data-embed="walkthrough/register" data-embed-view="form" data-embed-height="520"></div>
   </div>
 </div>
 
