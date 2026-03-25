@@ -51,29 +51,23 @@ All three produce the same result: `"Hello, World!"`
 
 # This Walkthrough Is a Photon
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:center;">
+<div class="cols center">
   <div>
-    <p style="font-size:1.05em;opacity:0.86;margin:0 0 0.9em;">
-      You're looking at a photon right now. The <code>main()</code> method
-      returns these slides, and Beam renders them as a presentation.
-    </p>
-    <pre style="margin:0;background:rgba(0,0,0,0.28);padding:18px;border-radius:14px;overflow:auto;"><code class="language-typescript">/**
- * @format slides
- */
+
+You're looking at a photon right now. The `main()` method returns these slides, and Beam renders them as a presentation.
+
+```typescript
+/** @format slides */
 main() {
   return this.assets('slides.md', true)
-}</code></pre>
-    <p style="font-size:0.92em;opacity:0.72;margin:1em 0 0;">
-      Every live demo on the following slides calls a method
-      on <em>this same photon</em>.
-    </p>
+}
+```
+
+<p class="small muted mt-1">Every live demo on the following slides calls a method on <em>this same photon</em>.</p>
+
   </div>
   <div>
-    <img
-      src="walkthrough-app-panel.png"
-      alt="Walkthrough running as a Beam app"
-      style="width:100%;display:block;border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,0.28);"
-    />
+    <img src="walkthrough-app-panel.png" alt="Walkthrough running as a Beam app" class="hero" />
   </div>
 </div>
 
@@ -83,10 +77,13 @@ main() {
 
 # Step 1: A Method Returns Data
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+<div class="cols">
   <div>
-    <p style="margin:0 0 12px;">Write a method. It becomes a tool. The return value is the result.</p>
-    <pre style="background:rgba(0,0,0,0.28);padding:16px;border-radius:12px;overflow:auto;font-size:0.85em;"><code class="language-typescript">export default class Hello {
+
+Write a method. It becomes a tool. The return value is the result.
+
+```typescript
+export default class Hello {
   /**
    * Say hello
    * @param name Who to greet
@@ -94,15 +91,16 @@ main() {
   greet({ name }: { name: string }) {
     return `Hello, ${name}!`;
   }
-}</code></pre>
-    <ul style="font-size:0.88em;margin:10px 0 0;padding-left:1.2em;">
-      <li>Public method → MCP tool</li>
-      <li>Parameter types → auto-generated form</li>
-      <li>Return value → displayed to user</li>
-    </ul>
+}
+```
+
+- Public method → MCP tool
+- Parameter types → auto-generated form
+- Return value → displayed to user
+
   </div>
   <div>
-    <p style="font-size:0.85em;opacity:0.7;margin:0 0 8px;">Live — try it:</p>
+    <p class="small muted">Live — try it:</p>
     <div data-embed="walkthrough/greet" data-embed-params='{"name":"World"}' data-embed-height="260"></div>
   </div>
 </div>
@@ -111,10 +109,13 @@ main() {
 
 # Step 2: Typed Parameters
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+<div class="cols">
   <div>
-    <p style="margin:0 0 12px;">TypeScript types become JSON Schema. The runtime auto-generates the right form widgets.</p>
-    <pre style="background:rgba(0,0,0,0.28);padding:16px;border-radius:12px;overflow:auto;font-size:0.85em;"><code class="language-typescript">export default class Calculator {
+
+TypeScript types become JSON Schema. The runtime auto-generates the right form widgets.
+
+```typescript
+export default class Calculator {
   /**
    * Add two numbers
    * @param a First number
@@ -126,16 +127,21 @@ main() {
       expression: `${a} + ${b} = ${a + b}`
     };
   }
-}</code></pre>
-    <ul style="font-size:0.88em;margin:10px 0 0;padding-left:1.2em;">
-      <li><code>number</code> → numeric input</li>
-      <li><code>string</code> → text field</li>
-      <li><code>boolean</code> → toggle switch</li>
-      <li><code>@param</code> docs → field labels</li>
-    </ul>
+}
+```
+
+<p class="small">
+
+- `number` → numeric input
+- `string` → text field
+- `boolean` → toggle switch
+- `@param` docs → field labels
+
+</p>
+
   </div>
   <div>
-    <p style="font-size:0.85em;opacity:0.7;margin:0 0 8px;">Live — Beam auto-generates this form:</p>
+    <p class="small muted">Live — Beam auto-generates this form:</p>
     <div data-embed="walkthrough/add" data-embed-params='{"a":5,"b":3}' data-embed-height="300"></div>
   </div>
 </div>
@@ -175,10 +181,13 @@ main() {
 
 # Step 3: Output Formats
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+<div class="cols">
   <div>
-    <p style="margin:0 0 12px;">Add <code>@format</code> to control how Beam renders results.</p>
-    <pre style="background:rgba(0,0,0,0.28);padding:16px;border-radius:12px;overflow:auto;font-size:0.82em;"><code class="language-typescript">export default class Dashboard {
+
+Add `@format` to control how Beam renders results.
+
+```typescript
+export default class Dashboard {
   /** @format table */
   team() {
     return [
@@ -193,12 +202,14 @@ main() {
     return { value: 73, max: 100,
              label: "CPU", unit: "%" };
   }
-}</code></pre>
+}
+```
+
   </div>
   <div>
-    <p style="font-size:0.85em;opacity:0.7;margin:0 0 8px;">Live — table and gauge:</p>
+    <p class="small muted">Live — table and gauge:</p>
     <div data-embed="walkthrough/team" data-embed-height="180"></div>
-    <div data-embed="walkthrough/health" data-embed-height="150" style="margin-top:12px;"></div>
+    <div data-embed="walkthrough/health" data-embed-height="150" class="mt-2"></div>
   </div>
 </div>
 
