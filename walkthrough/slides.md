@@ -130,14 +130,10 @@ export default class Calculator {
 }
 ```
 
-<p class="small">
-
 - `number` → numeric input
 - `string` → text field
 - `boolean` → toggle switch
 - `@param` docs → field labels
-
-</p>
 
   </div>
   <div>
@@ -150,28 +146,20 @@ export default class Calculator {
 
 # Beam Generates the UI and CLI
 
-<div style="display:grid;grid-template-columns:0.96fr 1.04fr;gap:20px;align-items:start;">
+<div class="cols center">
   <div>
-    <p style="font-size:0.95em;opacity:0.86;margin:0 0 0.7em;">
-      Once your method has typed params, Beam gives you:
-    </p>
-    <ul style="font-size:0.9em;line-height:1.5;margin:0 0 0.8em 1.1em;">
-      <li>a form with the right input widgets</li>
-      <li>a live CLI command you can copy</li>
-      <li>the same tool callable from Beam, CLI, and MCP</li>
-    </ul>
-    <img
-      src="beam-search-cli.png"
-      alt="CLI preview in Beam"
-      style="width:100%;max-height:140px;object-fit:contain;display:block;border-radius:12px;box-shadow:0 12px 28px rgba(0,0,0,0.2);"
-    />
+
+Once your method has typed params, Beam gives you:
+
+- A form with the right input widgets
+- A live CLI command you can copy
+- The same tool callable from Beam, CLI, and MCP
+
+<img src="beam-search-cli.png" alt="CLI preview in Beam" class="card mt-1" />
+
   </div>
   <div>
-    <img
-      src="beam-search-panel.png"
-      alt="Beam form and CLI preview"
-      style="width:100%;max-height:320px;object-fit:contain;display:block;border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,0.28);"
-    />
+    <img src="beam-search-panel.png" alt="Beam form and CLI preview" class="hero" />
   </div>
 </div>
 
@@ -217,10 +205,13 @@ export default class Dashboard {
 
 # Same Data, Different Views
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+<div class="cols">
   <div>
-    <p style="margin:0 0 12px;">Change <code>@format</code> and the same data renders differently.</p>
-    <pre style="background:rgba(0,0,0,0.28);padding:16px;border-radius:12px;overflow:auto;font-size:0.82em;"><code class="language-typescript">/** @format chart:bar */
+
+Change `@format` and the same data renders differently.
+
+```typescript
+/** @format chart:bar */
 revenue() {
   return [
     { label: "Q1", value: 42000 },
@@ -228,14 +219,14 @@ revenue() {
     { label: "Q3", value: 51000 },
     { label: "Q4", value: 67000 },
   ];
-}</code></pre>
-    <p style="font-size:0.88em;margin:14px 0 0;opacity:0.85;">
-      48 built-in formats across 7 categories:
-      data, charts, metrics, content, visuals, layout, and media.
-    </p>
+}
+```
+
+48 built-in formats across 7 categories: data, charts, metrics, content, visuals, layout, and media.
+
   </div>
   <div>
-    <p style="font-size:0.85em;opacity:0.7;margin:0 0 8px;">Live — bar chart:</p>
+    <p class="small muted">Live — bar chart:</p>
     <div data-embed="walkthrough/revenue" data-embed-height="280"></div>
   </div>
 </div>
@@ -262,10 +253,13 @@ If you don't specify `@format`, it auto-detects from data shape.
 
 # Step 4: Input Formats
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+<div class="cols">
   <div>
-    <p style="margin:0 0 12px;">Control how form fields render with <code>{@format}</code> on params.</p>
-    <pre style="background:rgba(0,0,0,0.28);padding:16px;border-radius:12px;overflow:auto;font-size:0.82em;"><code class="language-typescript">/**
+
+Control how form fields render with `{@format}` on params.
+
+```typescript
+/**
  * @param email Email {@format email}
  * @param birthday DOB {@format date}
  * @param role Role {@format segmented}
@@ -279,10 +273,12 @@ register({ email, birthday, role, bio }: {
 }) {
   return { registered: true, email,
            birthday, role };
-}</code></pre>
+}
+```
+
   </div>
   <div>
-    <p style="font-size:0.85em;opacity:0.7;margin:0 0 8px;">Live — specialized input widgets:</p>
+    <p class="small muted">Live — specialized input widgets:</p>
     <div data-embed="walkthrough/register" data-embed-view="form" data-embed-height="520"></div>
   </div>
 </div>
@@ -319,10 +315,13 @@ export default class Database {
 
 # Step 6: Stateful Photons
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+<div class="cols">
   <div>
-    <p style="margin:0 0 12px;">Add <code>@stateful</code> to persist data between calls.</p>
-    <pre style="background:rgba(0,0,0,0.28);padding:16px;border-radius:12px;overflow:auto;font-size:0.82em;"><code class="language-typescript">/**
+
+Add `@stateful` to persist data between calls.
+
+```typescript
+/**
  * @stateful
  */
 export default class TodoList {
@@ -340,20 +339,25 @@ export default class TodoList {
       name: t, status: "pending"
     }));
   }
-}</code></pre>
+}
+```
+
   </div>
   <div>
-    <ul style="font-size:0.92em;line-height:1.7;padding-left:1.2em;">
-      <li>State persists to <code>~/.photon/state/</code></li>
-      <li>Auto-emits events on every method call</li>
-      <li>Survives restarts — JSON-serialized to disk</li>
-      <li>Named instances: <code>_use('work')</code> for separate state</li>
-    </ul>
-    <pre style="background:rgba(0,0,0,0.28);padding:14px;border-radius:12px;overflow:auto;font-size:0.82em;margin-top:16px;"><code class="language-bash"># Two separate todo lists
+
+- State persists to `~/.photon/state/`
+- Auto-emits events on every method call
+- Survives restarts — JSON-serialized to disk
+- Named instances: `_use('work')` for separate state
+
+```bash
+# Two separate todo lists
 photon cli todo add --text "Buy milk" \
   --_use personal
 photon cli todo add --text "Ship v2" \
-  --_use work</code></pre>
+  --_use work
+```
+
   </div>
 </div>
 
@@ -361,10 +365,13 @@ photon cli todo add --text "Ship v2" \
 
 # Step 7: Real-time Updates
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+<div class="cols">
   <div>
-    <p style="margin:0 0 12px;">Generator methods stream results in real-time.</p>
-    <pre style="background:rgba(0,0,0,0.28);padding:16px;border-radius:12px;overflow:auto;font-size:0.82em;"><code class="language-typescript">export default class Monitor {
+
+Generator methods stream results in real-time.
+
+```typescript
+export default class Monitor {
   /** @format gauge */
   async *monitor() {
     for (let i = 0; i < 10; i++) {
@@ -381,16 +388,18 @@ photon cli todo add --text "Ship v2" \
     return { value: 42, max: 100,
              label: "CPU", unit: "%" };
   }
-}</code></pre>
+}
+```
+
   </div>
   <div>
-    <p style="font-size:0.85em;opacity:0.7;margin:0 0 8px;">Live — watch it update every second:</p>
+    <p class="small muted">Live — watch it update every second:</p>
     <div data-embed="walkthrough/monitor" data-embed-height="240"></div>
-    <ul style="font-size:0.85em;margin:12px 0 0;padding-left:1.2em;">
-      <li><code>yield { emit: "render" }</code> replaces the display</li>
-      <li><code>this.render(format, value)</code> does the same outside generators</li>
-      <li>Works across CLI, Beam, and MCP</li>
-    </ul>
+
+- `yield { emit: "render" }` replaces the display
+- `this.render(format, value)` does the same outside generators
+- Works across CLI, Beam, and MCP
+
   </div>
 </div>
 
@@ -423,23 +432,32 @@ The final `return` replaces the last `render()` with the permanent result.
 
 # Step 9: Custom UI
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+<div class="cols">
   <div>
-    <p style="margin:0 0 12px;">For full control, create a <code>.photon.html</code> template.</p>
-    <pre style="background:rgba(0,0,0,0.28);padding:16px;border-radius:12px;overflow:auto;font-size:0.85em;"><code class="language-html">&lt;!-- dashboard.photon.html --&gt;
-&lt;h1&gt;My Dashboard&lt;/h1&gt;
-&lt;div data-method="health"&gt;&lt;/div&gt;
-&lt;div data-method="team"&gt;&lt;/div&gt;
-&lt;button data-method="restart"
-        data-target="#status"&gt;
+
+For full control, create a `.photon.html` template.
+
+```html
+<!-- dashboard.photon.html -->
+<h1>My Dashboard</h1>
+<div data-method="health"></div>
+<div data-method="team"></div>
+<button data-method="restart"
+        data-target="#status">
   Restart
-&lt;/button&gt;
-&lt;span id="status"&gt;&lt;/span&gt;</code></pre>
-    <p style="font-size:0.88em;margin:10px 0 0;"><code>data-method</code> auto-infers format, renders live results, and respects the active theme.</p>
+</button>
+<span id="status"></span>
+```
+
+`data-method` auto-infers format, renders live results, and respects the active theme.
+
   </div>
   <div>
-    <p style="font-size:0.85em;opacity:0.7;margin:0 0 8px;">Or use the full bridge API in a <code>@ui</code> template:</p>
-    <pre style="background:rgba(0,0,0,0.28);padding:14px;border-radius:12px;overflow:auto;font-size:0.82em;"><code class="language-javascript">// window.dashboard is auto-created
+
+<p class="small muted">Or use the full bridge API in a <code>@ui</code> template:</p>
+
+```javascript
+// window.dashboard is auto-created
 window.dashboard.onResult(data => {
   render(data);
 });
@@ -453,7 +471,9 @@ const team = await
 // Subscribe to events
 window.dashboard.onEvent(event => {
   console.log(event);
-});</code></pre>
+});
+```
+
   </div>
 </div>
 
@@ -564,15 +584,16 @@ Your photon works on every MCP client — zero changes needed.
 
 # Interactive Slides
 
-These slides use two features you can add to any presentation photon:
+These slides use features you can add to any presentation photon:
 
 | Feature | How |
 |---------|-----|
-| **Live embeds** | `data-embed="photon/method"` renders Beam UI in an iframe |
-| **MCP calls** | `data-method="photon/method"` makes live tool calls |
+| **Live embeds** | `data-embed="photon/method"` renders live results inline |
+| **Streaming** | Generator methods animate in real-time via SSE |
+| **Auto forms** | Missing params → auto-generated input form |
 | **Transitions** | `transition: fade` in frontmatter or `<!-- transition: slide -->` per-slide |
 
-Every code example had a **live Beam panel** next to it — not a screenshot.
+Every code example had a **live panel** next to it — not a screenshot.
 All demos called methods on *this very photon*.
 
 ---
