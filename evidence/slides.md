@@ -274,7 +274,7 @@ Persistence, events, audit trail. No database.
   </div>
   <div>
     <p class="small muted">State persists across restarts:</p>
-    <div data-embed="evidence/list" data-embed-height="150"></div>
+    <div data-embed="evidence/list" data-embed-height="180"></div>
 
 ### What `@stateful` gives you:
 
@@ -398,6 +398,9 @@ photon mcp weather --config
 
 No rewrites. No adapters.
 The same `.photon.ts` runs unchanged.
+
+<p class="small muted mt-1">Live — deployment pipeline:</p>
+<div data-embed="evidence/pipeline" data-embed-height="120"></div>
 
   </div>
 </div>
