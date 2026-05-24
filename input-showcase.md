@@ -1,6 +1,6 @@
 # Input Showcase
 
-Input Showcase Demonstrates all input format types in the Photon auto-UI. Each method showcases a different input widget.
+Demonstrates all input format types in the Photon auto-UI. Each method showcases a different input widget.
 
 > **22 tools** · API Photon · v1.0.0 · MIT
 

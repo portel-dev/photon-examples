@@ -1,6 +1,6 @@
-# Discovery Demo
+# Discoverable
 
-Discoverable Service Demonstrates Server Cards and A2A Agent Cards. Both card types are auto-generated from the same photon metadata — rich docblocks, @stateful tag, and method descriptions map directly to MCP Server Card tools and A2A Agent Card skills.
+Demonstrates Server Cards and A2A Agent Cards. Both card types are auto-generated from the same photon metadata — rich docblocks, @stateful tag, and method descriptions map directly to MCP Server Card tools and A2A Agent Card skills.
 
 > **3 tools** · API Photon · v2.0.0 · MIT
 

@@ -1,6 +1,6 @@
 # Walkthrough
 
-Photon Walkthrough An interactive step-by-step guide to building photons. Every demo is a real method on this photon — zero external dependencies. The slides show code for named classes, but the live UI calls these methods.
+An interactive step-by-step guide to building photons. Every demo is a real method on this photon — zero external dependencies. The slides show code for named classes, but the live UI calls these methods.
 
 > **8 tools** · Workflow Photon · v2.0.0 · MIT
 

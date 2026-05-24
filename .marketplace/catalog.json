@@ -1,0 +1,88 @@
+{
+  "kind": "examples",
+  "title": "Photon Examples",
+  "description": "A focused set of teaching photons that show one Photon capability at a time.",
+  "quickStart": {
+    "photon": "walkthrough"
+  },
+  "removeExcludedDocs": true,
+  "sections": [
+    {
+      "title": "Start Here",
+      "description": "Small walkthroughs for learning Photon mechanics without a large app in the way.",
+      "photons": ["walkthrough", "discoverable", "context-aware"]
+    },
+    {
+      "title": "User Interfaces",
+      "description": "Examples that show how a method result turns into a useful embedded app surface.",
+      "photons": ["render-showcase", "input-showcase", "ag-ui-showcase", "pizzaz-shop"]
+    },
+    {
+      "title": "Runtime Patterns",
+      "description": "Examples for background work, streaming progress, and observable state.",
+      "photons": ["background-job", "deploy-pipeline", "observable"]
+    }
+  ],
+  "overrides": {
+    "walkthrough": {
+      "label": "Walkthrough",
+      "summary": "A guided first photon that explains the file, methods, and outputs.",
+      "category": "Start here",
+      "tags": ["starter", "tutorial"]
+    },
+    "discoverable": {
+      "label": "Discoverable",
+      "summary": "Shows how metadata and method descriptions make a photon easy for agents to use.",
+      "category": "Start here",
+      "tags": ["metadata", "discovery"]
+    },
+    "context-aware": {
+      "label": "Context Aware",
+      "summary": "Demonstrates runtime context and environment-aware behavior.",
+      "category": "Start here",
+      "tags": ["context", "runtime"]
+    },
+    "render-showcase": {
+      "label": "Render Showcase",
+      "summary": "Returns rich UI output so chat clients and Beam can render more than text.",
+      "category": "UI",
+      "tags": ["ui", "rendering"]
+    },
+    "input-showcase": {
+      "label": "Input Showcase",
+      "summary": "Demonstrates form inputs and interactive parameters for agent-driven workflows.",
+      "category": "UI",
+      "tags": ["forms", "inputs"]
+    },
+    "ag-ui-showcase": {
+      "label": "AG-UI Showcase",
+      "summary": "Shows agent UI events and structured interaction patterns.",
+      "category": "UI",
+      "tags": ["ag-ui", "events"]
+    },
+    "pizzaz-shop": {
+      "label": "Pizzaz Shop",
+      "summary": "A playful storefront example for embedded app flows and state transitions.",
+      "category": "UI",
+      "tags": ["commerce", "ui"]
+    },
+    "background-job": {
+      "label": "Background Job",
+      "summary": "Demonstrates long-running work and progress updates.",
+      "category": "Runtime patterns",
+      "tags": ["background", "progress"]
+    },
+    "deploy-pipeline": {
+      "label": "Deploy Pipeline",
+      "summary": "Shows streaming deployment stages as an agent-friendly workflow.",
+      "category": "Runtime patterns",
+      "tags": ["deploy", "streaming"]
+    },
+    "observable": {
+      "label": "Observable",
+      "summary": "Demonstrates observable state changes that clients can follow.",
+      "category": "Runtime patterns",
+      "tags": ["observable", "state"]
+    }
+  }
+}

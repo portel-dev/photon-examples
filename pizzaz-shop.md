@@ -1,6 +1,8 @@
 # Pizzaz Shop
 
-AI Pizza Ordering Assistant Demonstrates the AI+Human transaction workflow for food ordering: 1. AI suggests pizzas based on preferences 2. Human selects and customizes items 3. Human reviews cart and confirms order 4. System processes order with delivery info
+AI Pizza Ordering Assistant
+
+Demonstrates the AI+Human transaction workflow for food ordering: 1. AI suggests pizzas based on preferences 2. Human selects and customizes items 3. Human reviews cart and confirms order 4. System processes order with delivery info
 
 > **5 tools** · Streaming Photon · v1.0.0 · MIT
 

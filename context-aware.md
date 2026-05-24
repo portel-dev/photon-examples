@@ -1,6 +1,6 @@
 # Context Aware
 
-Context-Aware Photon Demonstrates bidirectional state exposure where frontend widget state flows into photon methods via this._clientState.
+Demonstrates bidirectional state exposure where frontend widget state flows into photon methods via this._clientState.
 
 > **2 tools** · API Photon · v1.0.0 · MIT
 

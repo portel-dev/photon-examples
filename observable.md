@@ -1,6 +1,6 @@
 # Observable
 
-Observable Computation Service Demonstrates OpenTelemetry GenAI instrumentation. When @opentelemetry/api is installed, all tool calls produce gen_ai.tool.call spans with standardized attributes. Without the package, everything works with zero overhead.
+Demonstrates OpenTelemetry GenAI instrumentation. When @opentelemetry/api is installed, all tool calls produce gen_ai.tool.call spans with standardized attributes. Without the package, everything works with zero overhead.
 
 > **2 tools** · API Photon · v1.0.0 · MIT
 

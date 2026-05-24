@@ -1,2 +1,11 @@
 
 .marketplace/_templates/
+.data/
+**/.data/
+.cache/
+**/.cache/
+.photon-cache/
+**/.photon-cache/
+.migrated
+**/.migrated
+**/.state/

@@ -1,6 +1,6 @@
-# Ag Ui Showcase
+# AG-UI Showcase
 
-AG-UI Event Showcase Demonstrates how photon yields map to AG-UI protocol events. String yields become TEXT_MESSAGE events, progress yields become STEP events, and return values become STATE_SNAPSHOT events.
+Demonstrates how photon yields map to AG-UI protocol events. String yields become TEXT_MESSAGE events, progress yields become STEP events, and return values become STATE_SNAPSHOT events.
 
 > **3 tools** · Streaming Photon · v1.0.0 · MIT
 

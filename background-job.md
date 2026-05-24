@@ -1,6 +1,6 @@
 # Background Job
 
-Background Job Processor Demonstrates MCP Tasks for fire-and-forget async operations. Designed for tasks/create — the client gets a task ID immediately and polls tasks/get for progress and results.
+Demonstrates MCP Tasks for fire-and-forget async operations. Designed for tasks/create — the client gets a task ID immediately and polls tasks/get for progress and results.
 
 > **2 tools** · Streaming Photon · v1.0.0 · MIT
 

@@ -1,6 +1,6 @@
 # Deploy Pipeline
 
-Deploy Pipeline Demonstrates persistent approvals for destructive operations. Approval confirmations survive page navigation and server restarts.
+Demonstrates persistent approvals for destructive operations. Approval confirmations survive page navigation and server restarts.
 
 > **2 tools** · Streaming Photon · v1.0.0 · MIT
 
