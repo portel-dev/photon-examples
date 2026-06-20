@@ -15,7 +15,7 @@
     {
       "title": "User Interfaces",
       "description": "Examples that show how a method result turns into a useful embedded app surface.",
-      "photons": ["render-showcase", "input-showcase", "ag-ui-showcase", "pizzaz-shop"]
+      "photons": ["render-showcase", "input-showcase", "ag-ui-showcase", "pizza-shop"]
     },
     {
       "title": "Runtime Patterns",
@@ -60,8 +60,8 @@
       "category": "UI",
       "tags": ["ag-ui", "events"]
     },
-    "pizzaz-shop": {
-      "label": "Pizzaz Shop",
+    "pizza-shop": {
+      "label": "Pizza Shop",
       "summary": "A playful storefront example for embedded app flows and state transitions.",
       "category": "UI",
       "tags": ["commerce", "ui"]

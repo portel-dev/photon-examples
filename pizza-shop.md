@@ -1,4 +1,4 @@
-# Pizzaz Shop
+# Pizza Shop
 
 AI Pizza Ordering Assistant
 
@@ -85,7 +85,7 @@ Get cart status
 
 ```mermaid
 flowchart LR
-    subgraph pizzaz_shop["📦 Pizzaz Shop"]
+    subgraph pizza_shop["📦 Pizza Shop"]
         direction TB
         PHOTON((🎯))
         T0[🌊 browseMenu (stream)]
@@ -106,10 +106,10 @@ flowchart LR
 
 ```bash
 # Install from marketplace
-photon add pizzaz-shop
+photon add pizza-shop
 
 # Get MCP config for your client
-photon info pizzaz-shop --mcp
+photon info pizza-shop --mcp
 ```
 
 ## 📦 Dependencies

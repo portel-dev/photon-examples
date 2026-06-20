@@ -36,7 +36,7 @@ Examples that show how a method result turns into a useful embedded app surface.
 | [**Render Showcase**](render-showcase.md) | Returns rich UI output so chat clients and Beam can render more than text. | 13 | API + UI |
 | [**Input Showcase**](input-showcase.md) | Demonstrates form inputs and interactive parameters for agent-driven workflows. | 22 | API |
 | [**AG-UI Showcase**](ag-ui-showcase.md) | Shows agent UI events and structured interaction patterns. | 3 | Streaming |
-| [**Pizzaz Shop**](pizzaz-shop.md) | A playful storefront example for embedded app flows and state transitions. | 5 | Streaming |
+| [**Pizza Shop**](pizza-shop.md) | A playful storefront example for embedded app flows and state transitions. | 5 | Streaming |
 
 ### Runtime Patterns
 

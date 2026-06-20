@@ -1,5 +1,5 @@
 /**
- * Pizzaz Shop - AI Pizza Ordering Assistant
+ * Pizza Shop - AI Pizza Ordering Assistant
  *
  * Demonstrates the AI+Human transaction workflow for food ordering:
  * 1. AI suggests pizzas based on preferences
@@ -41,7 +41,7 @@ const SIZE_MULTIPLIERS = {
   large: 1.3
 };
 
-export default class PizzazShop {
+export default class PizzaShop {
   private cart: OrderItem[] = [];
 
   // Pizza menu
@@ -140,6 +140,8 @@ export default class PizzazShop {
    * Browse the pizza menu
    *
    * Filter by category and select pizzas to add to cart.
+   *
+   * @format markdown
    */
   async *browseMenu() {
     yield io.emit.status('Loading menu...');
@@ -149,7 +151,7 @@ export default class PizzazShop {
 
     // Present menu with filters and search
     const selected: string[] = yield io.ask.select(
-      '🍕 Welcome to Pizzaz! Select pizzas to add to your order:',
+      '🍕 Welcome to Pizza Shop! Select pizzas to add to your order:',
       this.menu.map(pizza => ({
         value: pizza.id,
         label: pizza.name,
@@ -214,11 +216,7 @@ export default class PizzazShop {
 
     yield io.emit.toast(`Added ${selected.length} pizza(s) to cart!`, 'success');
 
-    return {
-      added: selected.length,
-      cartItems: this.cart.length,
-      cartTotal: this.calculateTotal()
-    };
+    return this.formatCartAsBill('Pizzas Added!');
   }
 
   /**
@@ -227,6 +225,7 @@ export default class PizzazShop {
    * Tell us your preferences and we'll suggest the perfect pizzas!
    *
    * @param preferences What kind of pizza are you in the mood for?
+   * @format markdown
    */
   async *recommend(params: { preferences: string }) {
     yield io.emit.status('Analyzing your preferences...');
@@ -294,16 +293,15 @@ export default class PizzazShop {
 
     yield io.emit.toast(`Added ${selected.length} recommended pizza(s)!`, 'success');
 
-    return {
-      added: selected.length,
-      cartTotal: this.calculateTotal()
-    };
+    return this.formatCartAsBill('Pizzas Added!');
   }
 
   /**
    * View and modify your cart
    *
    * Adjust quantities, remove items, or proceed to checkout.
+   *
+   * @format markdown
    */
   async *viewCart() {
     if (this.cart.length === 0) {
@@ -349,26 +347,20 @@ export default class PizzazShop {
 
     const newTotal = this.calculateTotal();
 
-    return {
-      items: this.cart.map(i => ({
-        name: i.pizza.name,
-        size: i.size,
-        qty: i.quantity,
-        subtotal: this.calculateItemPrice(i)
-      })),
-      total: newTotal
-    };
+    return this.formatCartAsBill('Your Cart Updated!');
   }
 
   /**
    * Complete your order
    *
    * Review cart, enter delivery info, and place your order!
+   *
+   * @format markdown
    */
   async *checkout() {
     if (this.cart.length === 0) {
       yield io.emit.toast('Your cart is empty!', 'warning');
-      return { success: false, message: 'Add pizzas to your cart first!' };
+      return '### ⚠️ Cart is Empty!\n\nPlease add some pizzas to your cart before checking out.';
     }
 
     const subtotal = this.calculateTotal();
@@ -390,7 +382,7 @@ export default class PizzazShop {
 
     if (!confirmed) {
       yield io.emit.toast('Checkout cancelled', 'info');
-      return { success: false, message: 'Checkout cancelled' };
+      return '### ❌ Checkout Cancelled\n\nYour order has not been placed. Feel free to continue customizing or browse the menu!';
     }
 
     // Collect delivery info
@@ -429,24 +421,21 @@ export default class PizzazShop {
     const eta = new Date(Date.now() + 35 * 60 * 1000);
     const etaStr = eta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+    const receipt = this.formatCartAsBill('Order Confirmed!', {
+      orderNumber,
+      etaStr,
+      customerName: delivery.name,
+      customerPhone: delivery.phone,
+      deliveryAddress: `${delivery.address}${delivery.apt ? ', ' + delivery.apt : ''}\n${delivery.city}, ${delivery.zip}`,
+      instructions: delivery.instructions
+    });
+
     // Clear cart
-    const orderedItems = [...this.cart];
     this.cart = [];
 
     yield io.emit.toast('🎉 Order placed successfully!', 'success');
 
-    return {
-      success: true,
-      orderNumber,
-      estimatedDelivery: etaStr,
-      items: orderedItems.map(i => ({
-        name: i.pizza.name,
-        size: i.size,
-        qty: i.quantity
-      })),
-      total: total.toFixed(2),
-      deliveryAddress: `${delivery.address}, ${delivery.city}`
-    };
+    return receipt;
   }
 
   /**
@@ -480,5 +469,98 @@ export default class PizzazShop {
 
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private formatCartAsBill(
+    title: string,
+    extraFields?: {
+      deliveryAddress?: string;
+      etaStr?: string;
+      instructions?: string;
+      orderNumber?: string;
+      customerName?: string;
+      customerPhone?: string;
+    }
+  ): string {
+    const subtotal = this.calculateTotal();
+    const deliveryFee = this.cart.length > 0 ? 3.99 : 0;
+    const tax = subtotal * 0.08;
+    const total = subtotal > 0 ? subtotal + deliveryFee + tax : 0;
+    const orderDate = new Date().toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+
+    let bill = `### 🍕 ${title}\n\n`;
+    bill += `\`\`\`text\n`;
+    bill += `========================================\n`;
+    bill += `              PIZZA SHOP                \n`;
+    bill += `        - Freshly Baked For You -       \n`;
+    bill += `========================================\n`;
+    if (extraFields?.orderNumber) {
+      bill += `Order ID:  ${extraFields.orderNumber}\n`;
+    }
+    bill += `Date:      ${orderDate}\n`;
+    if (extraFields?.customerName) {
+      bill += `Customer:  ${extraFields.customerName}\n`;
+    }
+    if (extraFields?.customerPhone) {
+      bill += `Phone:     ${extraFields.customerPhone}\n`;
+    }
+    bill += `----------------------------------------\n`;
+    bill += `Qty  Item`.padEnd(30) + `Price`.padStart(10) + `\n`;
+    bill += `----------------------------------------\n`;
+
+    if (this.cart.length === 0) {
+      bill += `         [ Cart is empty ]              \n`;
+    } else {
+      for (const item of this.cart) {
+        const baseName = `${item.pizza.name} (${item.size.charAt(0).toUpperCase() + item.size.slice(1)})`;
+        const price = this.calculateItemPrice({ ...item, extraToppings: [] });
+        
+        const qtyStr = `${item.quantity}`.padStart(2);
+        const nameStr = baseName.padEnd(25).slice(0, 25);
+        const priceStr = `$${price.toFixed(2)}`.padStart(10);
+        bill += ` ${qtyStr}  ${nameStr}${priceStr}\n`;
+
+        if (item.extraToppings.length > 0) {
+          for (const tId of item.extraToppings) {
+            const topping = this.extraToppings.find(t => t.id === tId);
+            if (topping) {
+              const toppingName = `+ ${topping.name}`;
+              const topPriceStr = `$${(topping.price * item.quantity).toFixed(2)}`.padStart(10);
+              bill += `     ${toppingName.padEnd(25).slice(0, 25)}${topPriceStr}\n`;
+            }
+          }
+        }
+      }
+    }
+
+    bill += `----------------------------------------\n`;
+    bill += `Subtotal:`.padEnd(30) + `$${subtotal.toFixed(2)}`.padStart(10) + `\n`;
+    if (total > 0) {
+      bill += `Delivery Fee:`.padEnd(30) + `$${deliveryFee.toFixed(2)}`.padStart(10) + `\n`;
+      bill += `Tax (8%):`.padEnd(30) + `$${tax.toFixed(2)}`.padStart(10) + `\n`;
+    }
+    bill += `========================================\n`;
+    bill += `TOTAL:`.padEnd(30) + `$${total.toFixed(2)}`.padStart(10) + `\n`;
+    bill += `========================================\n`;
+    
+    if (extraFields?.deliveryAddress) {
+      bill += `Delivery Address:\n`;
+      bill += `${extraFields.deliveryAddress}\n`;
+      bill += `----------------------------------------\n`;
+    }
+    if (extraFields?.instructions) {
+      bill += `Note: ${extraFields.instructions}\n`;
+      bill += `----------------------------------------\n`;
+    }
+    if (extraFields?.etaStr) {
+      bill += `ETA: ${extraFields.etaStr} (approx. 35 mins)\n`;
+      bill += `========================================\n`;
+    }
+    
+    bill += `     Thank you for your order!          \n`;
+    bill += `========================================\n`;
+    bill += `\`\`\`\n`;
+
+    return bill;
   }
 }
