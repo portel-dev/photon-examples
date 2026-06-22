@@ -415,43 +415,101 @@ Format your response as a valid JSON object. Do not include markdown formatting 
       return { items: [], total: 0, message: 'Add some pizzas first!' };
     }
 
-    const total = this.calculateTotal();
+    while (true) {
+      const total = this.calculateTotal();
+      const options = [
+        ...this.cart.map((item, idx) => {
+          const toppingsStr = item.extraToppings.length > 0 ? ` (+${item.extraToppings.join(', ')})` : '';
+          return {
+            value: `edit:${idx}`,
+            label: `${item.pizza.name} (${item.size.charAt(0).toUpperCase() + item.size.slice(1)})${toppingsStr}`,
+            description: `Qty: ${item.quantity} | Price: $${this.calculateItemPrice(item).toFixed(2)} (Click to edit/remove)`,
+            image: item.pizza.image
+          };
+        }),
+        { value: 'checkout', label: '💳 Proceed to Checkout', description: `Place your order (Total: $${total.toFixed(2)})` },
+        { value: 'clear', label: '🗑️ Empty Cart', description: 'Remove all items from your cart' },
+        { value: 'back', label: '⬅️ Back to Menu', description: 'Browse or add more pizzas' }
+      ];
 
-    // Show cart with adjustable quantities
-    const result: any = yield io.ask.select(
-      `🛒 Your Cart ($${total.toFixed(2)}). Adjust quantities or uncheck to remove:`,
-      this.cart.map((item, idx) => ({
-        value: `${idx}`,
-        label: `${item.pizza.name} (${item.size})`,
-        description: item.extraToppings.length > 0
-          ? `+${item.extraToppings.join(', ')}`
-          : item.pizza.toppings.slice(0, 3).join(', '),
-        image: item.pizza.image,
-        price: this.calculateItemPrice(item),
-        quantity: item.quantity,
-        adjustable: true,
-        minQuantity: 0,
-        maxQuantity: 5,
-        selected: true
-      })),
-      { multi: true, layout: 'list' }
-    );
+      const choice: string = yield io.ask.select(
+        `🛒 Manage Your Cart ($${total.toFixed(2)}):`,
+        options,
+        { layout: 'list' }
+      );
 
-    // Handle result with quantities
-    const keepIndices = Array.isArray(result) ? result : (result?.value || []);
-    const quantities = result?.quantities || {};
+      if (choice === 'back' || !choice) {
+        break;
+      }
 
-    // Update cart
-    this.cart = this.cart
-      .map((item, idx) => {
-        if (quantities[`${idx}`] !== undefined) {
-          item.quantity = quantities[`${idx}`];
+      if (choice === 'checkout') {
+        return yield* this.checkout();
+      }
+
+      if (choice === 'clear') {
+        this.cart = [];
+        yield io.emit.toast('Cart emptied', 'info');
+        return this.formatCartAsBill('');
+      }
+
+      if (choice.startsWith('edit:')) {
+        const idx = parseInt(choice.split(':')[1], 10);
+        const item = this.cart[idx];
+        if (!item) continue;
+
+        const action: string = yield io.ask.select(
+          `Editing ${item.pizza.name}:`,
+          [
+            { value: 'quantity', label: '🔢 Adjust Quantity', description: `Current: ${item.quantity}` },
+            { value: 'customize', label: '🍕 Change Size / Extra Toppings', description: 'Customize toppings and size' },
+            { value: 'remove', label: '❌ Remove Item', description: 'Delete this item from cart' },
+            { value: 'cancel', label: '⬅️ Cancel', description: 'Go back to cart' }
+          ],
+          { layout: 'list' }
+        );
+
+        if (action === 'remove') {
+          this.cart.splice(idx, 1);
+          yield io.emit.toast(`${item.pizza.name} removed`, 'info');
+          if (this.cart.length === 0) {
+            return this.formatCartAsBill('');
+          }
+        } else if (action === 'quantity') {
+          const qty: number = yield io.ask.number(
+            `Set quantity for ${item.pizza.name}:`,
+            { min: 1, max: 10, default: item.quantity }
+          );
+          if (qty > 0) {
+            item.quantity = qty;
+            yield io.emit.toast(`Quantity updated to ${qty}`, 'success');
+          }
+        } else if (action === 'customize') {
+          const size: string = yield io.ask.select(
+            `Choose size for ${item.pizza.name}:`,
+            [
+              { value: 'small', label: 'Small (10")', description: `$${(item.pizza.price * 0.8).toFixed(2)}`, selected: item.size === 'small' },
+              { value: 'medium', label: 'Medium (12")', description: `$${item.pizza.price.toFixed(2)}`, selected: item.size === 'medium' },
+              { value: 'large', label: 'Large (14")', description: `$${(item.pizza.price * 1.3).toFixed(2)}`, selected: item.size === 'large' }
+            ],
+            { layout: 'list' }
+          );
+          item.size = size as 'small' | 'medium' | 'large';
+
+          const extras: string[] = yield io.ask.select(
+            `Add extra toppings to ${item.pizza.name}?`,
+            this.extraToppings.map(t => ({
+              value: t.id,
+              label: t.name,
+              description: `+$${t.price.toFixed(2)}`,
+              selected: item.extraToppings.includes(t.id)
+            })),
+            { multi: true, layout: 'list' }
+          );
+          item.extraToppings = extras || [];
+          yield io.emit.toast('Customization updated', 'success');
         }
-        return item;
-      })
-      .filter((item, idx) => keepIndices.includes(`${idx}`) && item.quantity > 0);
-
-    const newTotal = this.calculateTotal();
+      }
+    }
 
     return this.formatCartAsBill('Your Cart Updated!');
   }

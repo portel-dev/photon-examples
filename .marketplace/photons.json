@@ -227,8 +227,8 @@
       ],
       "category": "UI",
       "source": "../pizza-shop.photon.ts",
-      "hash": "sha256:7ad17bb59dd962eb427625386d2090a58e7b110ac37aa7eb19d7433b8215258a",
-      "contentHash": "sha256:7ad17bb59dd962eb427625386d2090a58e7b110ac37aa7eb19d7433b8215258a",
+      "hash": "sha256:2109f163dcf613b069c547eaf6c0527b58aafac5095971f6bf4f5cf644beb5c6",
+      "contentHash": "sha256:2109f163dcf613b069c547eaf6c0527b58aafac5095971f6bf4f5cf644beb5c6",
       "tools": [
         "browseMenu",
         "recommend",
@@ -239,7 +239,8 @@
       "assets": [],
       "photonType": "streaming",
       "features": [
-        "generator"
+        "generator",
+        "elicitation"
       ],
       "label": "Pizza Shop",
       "summary": "A playful storefront example for embedded app flows and state transitions."
