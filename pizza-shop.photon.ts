@@ -231,23 +231,54 @@ export default class PizzaShop {
     yield io.emit.status('Analyzing your preferences...');
     yield io.emit.thinking(true);
 
-    // Simple keyword matching for demo (real app would use LLM)
     const prefs = params.preferences.toLowerCase();
     let recommendations: Pizza[] = [];
 
-    if (prefs.includes('meat') || prefs.includes('protein')) {
-      recommendations = this.menu.filter(p => p.category === 'meat-lovers');
-    } else if (prefs.includes('veggie') || prefs.includes('vegetarian') || prefs.includes('healthy')) {
-      recommendations = this.menu.filter(p => p.category === 'vegetarian');
-    } else if (prefs.includes('spicy') || prefs.includes('hot')) {
-      recommendations = this.menu.filter(p => p.spicy);
-    } else if (prefs.includes('classic') || prefs.includes('simple') || prefs.includes('traditional')) {
-      recommendations = this.menu.filter(p => p.category === 'classic');
-    } else if (prefs.includes('popular') || prefs.includes('best')) {
-      recommendations = this.menu.filter(p => p.popular);
-    } else {
-      // Default to popular items
-      recommendations = this.menu.filter(p => p.popular || p.category === 'specialty');
+    // Attempt AI-based semantic matching using sampling API
+    try {
+      const menuDescription = this.menu.map(p => 
+        `- ID: ${p.id}, Name: ${p.name}, Description: ${p.description}, Category: ${p.category}, Toppings: ${p.toppings.join(', ')}`
+      ).join('\n');
+
+      const prompt = `You are a helpful AI assistant for a Pizza Shop.
+The customer has specified the following pizza preferences or keywords: "${params.preferences}"
+
+Here is our menu:
+${menuDescription}
+
+Based on the customer's input, select the best matching pizzas from the menu (e.g., matching ingredients, style, spelling typos, or category).
+Return ONLY a comma-separated list of matching pizza IDs (e.g., margherita, meat-supreme).
+If no pizzas match, return "none".`;
+
+      const response = await (this as any).sample({
+        prompt,
+        maxTokens: 128
+      });
+
+      if (response && typeof response === 'string' && response.toLowerCase().trim() !== 'none') {
+        const ids = response.split(',').map(s => s.trim().toLowerCase());
+        recommendations = this.menu.filter(p => ids.includes(p.id.toLowerCase()));
+      }
+    } catch (e) {
+      // Graceful fallback to keyword matching if AI sampling is unavailable
+    }
+
+    // Keyword Fallback matching
+    if (recommendations.length === 0) {
+      if (prefs.includes('meat') || prefs.includes('protein') || prefs.includes('beef') || prefs.includes('bacon')) {
+        recommendations = this.menu.filter(p => p.category === 'meat-lovers');
+      } else if (prefs.includes('veggie') || prefs.includes('vegetarian') || prefs.includes('healthy') || prefs.includes('onion')) {
+        recommendations = this.menu.filter(p => p.category === 'vegetarian');
+      } else if (prefs.includes('spicy') || prefs.includes('hot') || prefs.includes('chili')) {
+        recommendations = this.menu.filter(p => p.spicy);
+      } else if (prefs.includes('classic') || prefs.includes('simple') || prefs.includes('traditional') || prefs.includes('tomato')) {
+        recommendations = this.menu.filter(p => p.category === 'classic');
+      } else if (prefs.includes('popular') || prefs.includes('best')) {
+        recommendations = this.menu.filter(p => p.popular);
+      } else {
+        // Default to popular items
+        recommendations = this.menu.filter(p => p.popular || p.category === 'specialty');
+      }
     }
 
     yield io.emit.thinking(false);
@@ -363,21 +394,85 @@ export default class PizzaShop {
       return '### ⚠️ Cart is Empty!\n\nPlease add some pizzas to your cart before checking out.';
     }
 
-    const subtotal = this.calculateTotal();
-    const deliveryFee = 3.99;
-    const tax = subtotal * 0.08;
-    const total = subtotal + deliveryFee + tax;
+    // 1. Choose Order Type
+    const orderType: 'delivery' | 'pickup' = yield io.ask.select('🥡 Select Order Type', [
+      { value: 'delivery', label: '🚗 Delivery (+$3.99)', description: 'Delivered to your door in 30-45 mins' },
+      { value: 'pickup', label: '🥡 Store Pickup ($0.00)', description: 'Ready at our main branch in 15 mins' }
+    ]);
 
-    // Show order summary and confirm
+    // 2. Choose Payment Method
+    const paymentMethod: 'card' | 'cod' = yield io.ask.select('💳 Select Payment Method', [
+      { value: 'card', label: '💳 Credit / Debit Card', description: 'Pay securely online' },
+      { value: 'cod', label: orderType === 'pickup' ? '💵 Pay on Pickup' : '💵 Cash on Delivery', description: 'Pay with cash or card upon receipt' }
+    ]);
+
+    // 3. Collect Card Details if card selected
+    let cardInfo = null;
+    if (paymentMethod === 'card') {
+      cardInfo = yield io.ask.form('💳 Card Details', {
+        type: 'object',
+        properties: {
+          cardholder: { type: 'string', title: 'Cardholder Name' },
+          cardNumber: { type: 'string', title: 'Card Number (16 digits)' },
+          expiry: { type: 'string', title: 'Expiry Date (MM/YY)' },
+          cvv: { type: 'string', title: 'CVV' }
+        },
+        required: ['cardholder', 'cardNumber', 'expiry', 'cvv']
+      });
+    }
+
+    // 4. Collect customer and location details
+    let customerName = '';
+    let customerPhone = '';
+    let addressStr = '';
+    let instructions = '';
+
+    if (orderType === 'delivery') {
+      const delivery = yield io.ask.form('🚗 Delivery Address', {
+        type: 'object',
+        properties: {
+          name: { type: 'string', title: 'Your Name' },
+          phone: { type: 'string', title: 'Phone Number' },
+          address: { type: 'string', title: 'Street Address' },
+          apt: { type: 'string', title: 'Apt/Suite (optional)' },
+          city: { type: 'string', title: 'City' },
+          zip: { type: 'string', title: 'ZIP Code' },
+          instructions: { type: 'string', title: 'Delivery Instructions (optional)' }
+        },
+        required: ['name', 'phone', 'address', 'city', 'zip']
+      });
+      customerName = delivery.name;
+      customerPhone = delivery.phone;
+      addressStr = `${delivery.address}${delivery.apt ? ', ' + delivery.apt : ''}\n${delivery.city}, ${delivery.zip}`;
+      instructions = delivery.instructions;
+    } else {
+      const pickup = yield io.ask.form('🥡 Pickup Contact', {
+        type: 'object',
+        properties: {
+          name: { type: 'string', title: 'Your Name' },
+          phone: { type: 'string', title: 'Phone Number' },
+          pickupTime: { type: 'string', title: 'Pickup Time (ASAP / Specific time)' }
+        },
+        required: ['name', 'phone']
+      });
+      customerName = pickup.name;
+      customerPhone = pickup.phone;
+      addressStr = '🥡 Store Pickup: 742 Evergreen Terrace, Springfield';
+      instructions = `Pickup Time: ${pickup.pickupTime || 'ASAP'}`;
+    }
+
+    // 5. Generate temporary order details for confirmation
+    const tempReceipt = this.formatCartAsBill('Confirm Order Details', {
+      orderType: orderType === 'delivery' ? 'Delivery' : 'Pickup',
+      paymentMethod: paymentMethod === 'card' ? 'Credit Card' : (orderType === 'pickup' ? 'Pay on Pickup' : 'Cash on Delivery'),
+      customerName,
+      customerPhone,
+      deliveryAddress: addressStr,
+      instructions
+    });
+
     const confirmed: boolean = yield io.ask.confirm(
-      `📦 Order Summary\n\n` +
-      this.cart.map(i => `• ${i.pizza.name} (${i.size}) ×${i.quantity}`).join('\n') +
-      `\n\nSubtotal: $${subtotal.toFixed(2)}\n` +
-      `Delivery: $${deliveryFee.toFixed(2)}\n` +
-      `Tax: $${tax.toFixed(2)}\n` +
-      `━━━━━━━━━━━━━━\n` +
-      `Total: $${total.toFixed(2)}\n\n` +
-      `Proceed to delivery info?`
+      `${tempReceipt}\n\nDo you want to confirm and place this order?`
     );
 
     if (!confirmed) {
@@ -385,49 +480,37 @@ export default class PizzaShop {
       return '### ❌ Checkout Cancelled\n\nYour order has not been placed. Feel free to continue customizing or browse the menu!';
     }
 
-    // Collect delivery info
-    yield io.emit.status('Enter delivery information...');
-
-    const delivery = yield io.ask.form('🚗 Delivery Details', {
-      type: 'object',
-      properties: {
-        name: { type: 'string', title: 'Your Name' },
-        phone: { type: 'string', title: 'Phone Number' },
-        address: { type: 'string', title: 'Street Address' },
-        apt: { type: 'string', title: 'Apt/Suite (optional)' },
-        city: { type: 'string', title: 'City' },
-        zip: { type: 'string', title: 'ZIP Code' },
-        instructions: { type: 'string', title: 'Delivery Instructions (optional)' }
-      },
-      required: ['name', 'phone', 'address', 'city', 'zip']
-    });
-
-    // Process order
+    // 6. Process payment & order
     yield io.emit.progress(0.2, 'Validating order...');
     await this.delay(500);
 
-    yield io.emit.progress(0.5, 'Processing payment...');
-    await this.delay(800);
+    if (paymentMethod === 'card') {
+      yield io.emit.progress(0.5, 'Authorizing card payment...');
+      await this.delay(800);
+    } else {
+      yield io.emit.progress(0.5, 'Securing order allocation...');
+      await this.delay(600);
+    }
 
     yield io.emit.progress(0.8, 'Sending to kitchen...');
     await this.delay(600);
 
     yield io.emit.progress(1.0, 'Order confirmed!');
 
-    // Generate order number
     const orderNumber = `PZZ-${Date.now().toString(36).toUpperCase()}`;
-
-    // Estimate delivery time (30-45 min)
-    const eta = new Date(Date.now() + 35 * 60 * 1000);
+    const etaMin = orderType === 'delivery' ? 35 : 15;
+    const eta = new Date(Date.now() + etaMin * 60 * 1000);
     const etaStr = eta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const receipt = this.formatCartAsBill('Order Confirmed!', {
+    const finalReceipt = this.formatCartAsBill('Order Confirmed!', {
       orderNumber,
+      orderType: orderType === 'delivery' ? 'Delivery' : 'Pickup',
+      paymentMethod: paymentMethod === 'card' ? 'Credit Card' : (orderType === 'pickup' ? 'Pay on Pickup' : 'Cash on Delivery'),
       etaStr,
-      customerName: delivery.name,
-      customerPhone: delivery.phone,
-      deliveryAddress: `${delivery.address}${delivery.apt ? ', ' + delivery.apt : ''}\n${delivery.city}, ${delivery.zip}`,
-      instructions: delivery.instructions
+      customerName,
+      customerPhone,
+      deliveryAddress: addressStr,
+      instructions
     });
 
     // Clear cart
@@ -435,7 +518,7 @@ export default class PizzaShop {
 
     yield io.emit.toast('🎉 Order placed successfully!', 'success');
 
-    return receipt;
+    return finalReceipt;
   }
 
   /**
@@ -480,10 +563,13 @@ export default class PizzaShop {
       orderNumber?: string;
       customerName?: string;
       customerPhone?: string;
+      orderType?: 'Delivery' | 'Pickup';
+      paymentMethod?: string;
     }
   ): string {
     const subtotal = this.calculateTotal();
-    const deliveryFee = this.cart.length > 0 ? 3.99 : 0;
+    const isDelivery = extraFields?.orderType !== 'Pickup';
+    const deliveryFee = this.cart.length > 0 && isDelivery ? 3.99 : 0;
     const tax = subtotal * 0.08;
     const total = subtotal > 0 ? subtotal + deliveryFee + tax : 0;
     const orderDate = new Date().toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
@@ -498,6 +584,12 @@ export default class PizzaShop {
       bill += `Order ID:  ${extraFields.orderNumber}\n`;
     }
     bill += `Date:      ${orderDate}\n`;
+    if (extraFields?.orderType) {
+      bill += `Type:      ${extraFields.orderType}\n`;
+    }
+    if (extraFields?.paymentMethod) {
+      bill += `Payment:   ${extraFields.paymentMethod}\n`;
+    }
     if (extraFields?.customerName) {
       bill += `Customer:  ${extraFields.customerName}\n`;
     }
@@ -536,7 +628,9 @@ export default class PizzaShop {
     bill += `----------------------------------------\n`;
     bill += `Subtotal:`.padEnd(30) + `$${subtotal.toFixed(2)}`.padStart(10) + `\n`;
     if (total > 0) {
-      bill += `Delivery Fee:`.padEnd(30) + `$${deliveryFee.toFixed(2)}`.padStart(10) + `\n`;
+      if (isDelivery) {
+        bill += `Delivery Fee:`.padEnd(30) + `$${deliveryFee.toFixed(2)}`.padStart(10) + `\n`;
+      }
       bill += `Tax (8%):`.padEnd(30) + `$${tax.toFixed(2)}`.padStart(10) + `\n`;
     }
     bill += `========================================\n`;
@@ -544,16 +638,19 @@ export default class PizzaShop {
     bill += `========================================\n`;
     
     if (extraFields?.deliveryAddress) {
-      bill += `Delivery Address:\n`;
+      const addressLabel = extraFields.orderType === 'Pickup' ? 'Pickup Location' : 'Delivery Address';
+      bill += `${addressLabel}:\n`;
       bill += `${extraFields.deliveryAddress}\n`;
       bill += `----------------------------------------\n`;
     }
     if (extraFields?.instructions) {
-      bill += `Note: ${extraFields.instructions}\n`;
+      const noteLabel = extraFields.orderType === 'Pickup' ? 'Time' : 'Note';
+      bill += `${noteLabel}: ${extraFields.instructions}\n`;
       bill += `----------------------------------------\n`;
     }
     if (extraFields?.etaStr) {
-      bill += `ETA: ${extraFields.etaStr} (approx. 35 mins)\n`;
+      const timeLabel = extraFields.orderType === 'Pickup' ? 'Ready by' : 'ETA';
+      bill += `${timeLabel}: ${extraFields.etaStr} (approx. ${extraFields.orderType === 'Pickup' ? '15' : '35'} mins)\n`;
       bill += `========================================\n`;
     }
     
