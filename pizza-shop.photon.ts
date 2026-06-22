@@ -217,8 +217,7 @@ export default class PizzaShop {
 
       yield io.emit.toast(`Added ${selected.length} pizza(s) to cart!`, 'success');
 
-      const status = await this.status('Pizzas Added!');
-      return status.text;
+      return this.formatCartAsBill('Pizzas Added!');
     } catch (e) {
       // Fallback: Return static markdown of the menu if elicitation is not supported
       const menuMarkdown = this.menu.map(pizza => 
@@ -409,8 +408,7 @@ Format your response as a valid JSON object. Do not include markdown formatting 
 
       yield io.emit.toast(`Added ${selected.length} recommended pizza(s) with toppings!`, 'success');
 
-      const status = await this.status('Pizzas Added!');
-      return status.text;
+      return this.formatCartAsBill('Pizzas Added!');
     } catch (e) {
       // Fallback: Return static recommendation markdown
       const recsMarkdown = recommendations.map(pizza => 
@@ -468,8 +466,7 @@ Format your response as a valid JSON object. Do not include markdown formatting 
         if (choice === 'clear') {
           this.cart = [];
           yield io.emit.toast('Cart emptied', 'info');
-          const status = await this.status('');
-          return status.text;
+          return this.formatCartAsBill('');
         }
 
         if (choice.startsWith('edit:')) {
@@ -492,8 +489,7 @@ Format your response as a valid JSON object. Do not include markdown formatting 
             this.cart.splice(idx, 1);
             yield io.emit.toast(`${item.pizza.name} removed`, 'info');
             if (this.cart.length === 0) {
-              const status = await this.status('');
-              return status.text;
+              return this.formatCartAsBill('');
             }
           } else if (action === 'quantity') {
             const qty: number = yield io.ask.number(
@@ -533,12 +529,10 @@ Format your response as a valid JSON object. Do not include markdown formatting 
       }
     } catch (e) {
       // Fallback: Display the styled bill receipt if elicitation is not supported
-      const status = await this.status('Your Cart');
-      return status.text;
+      return this.formatCartAsBill('Your Cart');
     }
 
-    const status = await this.status('Your Cart Updated!');
-    return status.text;
+    return this.formatCartAsBill('Your Cart Updated!');
   }
 
   /**
@@ -663,7 +657,7 @@ Format your response as a valid JSON object. Do not include markdown formatting 
       const eta = new Date(Date.now() + etaMin * 60 * 1000);
       const etaStr = eta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      const finalReceipt = (await this.status('Order Confirmed!', {
+      const finalReceipt = this.formatCartAsBill('Order Confirmed!', {
         orderNumber,
         orderType: orderType === 'delivery' ? 'Delivery' : 'Pickup',
         paymentMethod: paymentMethod === 'card' ? 'Credit Card' : (orderType === 'pickup' ? 'Pay on Pickup' : 'Cash on Delivery'),
@@ -672,7 +666,7 @@ Format your response as a valid JSON object. Do not include markdown formatting 
         customerPhone,
         deliveryAddress: addressStr,
         instructions
-      })).text;
+      });
 
       // Clear cart
       this.cart = [];
@@ -681,8 +675,7 @@ Format your response as a valid JSON object. Do not include markdown formatting 
 
       return finalReceipt;
     } catch (e) {
-      const status = await this.status('Your Cart');
-      return `### 💳 Checkout Error\n\nInteractive checkout is not supported in this client. Please view your cart or checkout using the Beam UI.\n\n${status.text}`;
+      return `### 💳 Checkout Error\n\nInteractive checkout is not supported in this client. Please view your cart or checkout using the Beam UI.\n\n${this.formatCartAsBill('Your Cart')}`;
     }
   }
 
@@ -691,22 +684,10 @@ Format your response as a valid JSON object. Do not include markdown formatting 
    * @autorun
    * @format article {@columns 1}
    */
-  async status(
-    title = '',
-    extraFields?: {
-      deliveryAddress?: string;
-      etaStr?: string;
-      instructions?: string;
-      orderNumber?: string;
-      customerName?: string;
-      customerPhone?: string;
-      orderType?: 'Delivery' | 'Pickup';
-      paymentMethod?: string;
-    }
-  ) {
+  async status() {
     const itemCount = this.cart.reduce((sum, i) => sum + i.quantity, 0);
     const total = this.calculateTotal();
-    const bill = this.formatCartAsBill(title, extraFields);
+    const bill = this.formatCartAsBill('');
 
     return {
       items: itemCount,
