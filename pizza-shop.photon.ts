@@ -664,108 +664,86 @@ Format your response as a valid JSON object. Do not include markdown formatting 
       for (const item of this.cart) {
         const baseName = `${item.pizza.name} (${item.size.charAt(0).toUpperCase() + item.size.slice(1)})`;
         const price = this.calculateItemPrice({ ...item, extraToppings: [] });
-        itemsHtml += `
-          <div class="receipt-row">
-            <span>${item.quantity} x ${baseName}</span>
-            <span>$${price.toFixed(2)}</span>
-          </div>
-        `;
+        itemsHtml += `<div class="receipt-row">
+<span>${item.quantity} x ${baseName}</span>
+<span>$${price.toFixed(2)}</span>
+</div>`;
         if (item.extraToppings.length > 0) {
           for (const tId of item.extraToppings) {
             const topping = this.extraToppings.find(t => t.id === tId);
             if (topping) {
-              itemsHtml += `
-                <div class="receipt-row sub-row">
-                  <span>+ ${topping.name}</span>
-                  <span>+$${(topping.price * item.quantity).toFixed(2)}</span>
-                </div>
-              `;
+              itemsHtml += `<div class="receipt-row sub-row">
+<span>+ ${topping.name}</span>
+<span>+$${(topping.price * item.quantity).toFixed(2)}</span>
+</div>`;
             }
           }
         }
       }
     }
 
-    let metaHtml = `
-      <div class="receipt-row">
-        <span>Date: ${orderDate.split(',')[0]}</span>
-        <span>Time: ${orderDate.split(',')[1]?.trim() || ''}</span>
-      </div>
-    `;
+    let metaHtml = `<div class="receipt-row">
+<span>Date: ${orderDate.split(',')[0]}</span>
+<span>Time: ${orderDate.split(',')[1]?.trim() || ''}</span>
+</div>`;
 
     if (extraFields?.orderNumber) {
-      metaHtml += `
-        <div class="receipt-row">
-          <span>RECEIPT NO:</span>
-          <span>${extraFields.orderNumber}</span>
-        </div>
-      `;
+      metaHtml += `<div class="receipt-row">
+<span>RECEIPT NO:</span>
+<span>${extraFields.orderNumber}</span>
+</div>`;
     }
     if (extraFields?.customerName) {
-      metaHtml += `
-        <div class="receipt-row">
-          <span>CUSTOMER:</span>
-          <span>${extraFields.customerName}</span>
-        </div>
-      `;
+      metaHtml += `<div class="receipt-row">
+<span>CUSTOMER:</span>
+<span>${extraFields.customerName}</span>
+</div>`;
     }
     if (extraFields?.orderType) {
-      metaHtml += `
-        <div class="receipt-row">
-          <span>ORDER TYPE:</span>
-          <span>${extraFields.orderType}</span>
-        </div>
-      `;
+      metaHtml += `<div class="receipt-row">
+<span>ORDER TYPE:</span>
+<span>${extraFields.orderType}</span>
+</div>`;
     }
     if (extraFields?.paymentMethod) {
-      metaHtml += `
-        <div class="receipt-row">
-          <span>PAYMENT MODE:</span>
-          <span>${extraFields.paymentMethod}</span>
-        </div>
-      `;
+      metaHtml += `<div class="receipt-row">
+<span>PAYMENT MODE:</span>
+<span>${extraFields.paymentMethod}</span>
+</div>`;
     }
     if (extraFields?.customerPhone) {
-      metaHtml += `
-        <div class="receipt-row">
-          <span>CONTACT NO:</span>
-          <span>${extraFields.customerPhone}</span>
-        </div>
-      `;
+      metaHtml += `<div class="receipt-row">
+<span>CONTACT NO:</span>
+<span>${extraFields.customerPhone}</span>
+</div>`;
     }
 
     let addressHtml = '';
     if (extraFields?.deliveryAddress) {
       const addressLabel = extraFields.orderType === 'Pickup' ? 'Pickup Location' : 'Delivery Address';
-      addressHtml = `
-        <div class="receipt-divider"></div>
-        <div class="receipt-address-block">
-          <div style="font-weight: bold; margin-bottom: 2px;">${addressLabel}:</div>
-          <div>${extraFields.deliveryAddress.replace(/\n/g, '<br/>')}</div>
-        </div>
-      `;
+      addressHtml = `<div class="receipt-divider"></div>
+<div class="receipt-address-block">
+<div style="font-weight: bold; margin-bottom: 2px;">${addressLabel}:</div>
+<div>${extraFields.deliveryAddress.replace(/\n/g, '<br/>')}</div>
+</div>`;
     }
 
     let instructionsHtml = '';
     if (extraFields?.instructions) {
       const noteLabel = extraFields.orderType === 'Pickup' ? 'Time' : 'Note';
-      instructionsHtml = `
-        <div class="receipt-row" style="margin-top: 4px; font-size: 11px;">
-          <span>${noteLabel}:</span>
-          <span>${extraFields.instructions}</span>
-        </div>
-      `;
+      instructionsHtml = `<div class="receipt-row" style="margin-top: 4px; font-size: 11px;">
+<span>${noteLabel}:</span>
+<span>${extraFields.instructions}</span>
+</div>`;
     }
 
     let etaHtml = '';
     if (extraFields?.etaStr) {
       const timeLabel = extraFields.orderType === 'Pickup' ? 'Ready by' : 'ETA';
-      etaHtml = `
-        <div class="receipt-row" style="margin-top: 4px; font-weight: bold;">
-          <span>${timeLabel}:</span>
-          <span>${extraFields.etaStr} (${extraFields.orderType === 'Pickup' ? '15' : '35'}m)</span>
-        </div>
-      `;
+      etaHtml = `<div class="receipt-row" style="margin-top: 4px; font-weight: bold;">
+<span>${timeLabel}:</span>
+<span>${extraFields.etaStr} (${extraFields.orderType === 'Pickup' ? '15' : '35'}m)</span>
+</div>`;
     }
 
     let bill = '';
@@ -773,146 +751,145 @@ Format your response as a valid JSON object. Do not include markdown formatting 
       bill += `<h3 style="margin-top: 0; color: var(--t-primary); font-family: var(--font-display); text-align: center;">🍕 ${title}</h3>`;
     }
 
-    bill += `
-<style>
-  .pizza-receipt-paper {
-    background: #fdfcf7 !important;
-    color: #111111 !important;
-    padding: 24px !important;
-    border-radius: 4px !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-    border: 1px solid #e2e8f0 !important;
-    max-width: 330px !important;
-    margin: 16px auto !important;
-    font-family: 'Courier New', Courier, monospace !important;
-    font-size: 13px !important;
-    line-height: 1.45 !important;
-  }
-  .receipt-header {
-    text-align: center;
-    margin-bottom: 12px;
-  }
-  .receipt-brand {
-    font-size: 22px;
-    font-weight: bold;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-    letter-spacing: 0.05em;
-    color: #000000 !important;
-  }
-  .receipt-sub {
-    font-size: 11px;
-    opacity: 0.8;
-    margin-bottom: 2px;
-    font-weight: bold;
-  }
-  .receipt-address, .receipt-contact {
-    font-size: 11px;
-    opacity: 0.8;
-  }
-  .receipt-divider {
-    border-top: 1px dashed #777777 !important;
-    margin: 10px 0 !important;
-    height: 0 !important;
-  }
-  .receipt-divider.divider-double {
-    border-top: 3px double #333333 !important;
-  }
-  .receipt-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 3px;
-  }
-  .receipt-row.sub-row {
-    font-size: 11px;
-    padding-left: 12px;
-    opacity: 0.9;
-  }
-  .receipt-empty {
-    text-align: center;
-    padding: 12px;
-    opacity: 0.7;
-    font-style: italic;
-  }
-  .receipt-totals {
-    font-weight: bold;
-  }
-  .receipt-totals .receipt-row {
-    margin-bottom: 4px;
-  }
-  .receipt-totals .total-grand {
-    font-size: 16px;
-    margin-top: 4px;
-  }
-  .receipt-address-block {
-    font-size: 11px;
-    line-height: 1.3;
-  }
-  .receipt-footer {
-    text-align: center;
-    margin-top: 16px;
-    font-size: 12px;
-    line-height: 1.5;
-    font-weight: bold;
-  }
+    bill += `<style>
+.pizza-receipt-paper {
+  background: #fdfcf7 !important;
+  color: #111111 !important;
+  padding: 24px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e2e8f0 !important;
+  max-width: 330px !important;
+  margin: 16px auto !important;
+  font-family: 'Courier New', Courier, monospace !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+}
+.receipt-header {
+  text-align: center;
+  margin-bottom: 12px;
+}
+.receipt-brand {
+  font-size: 22px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  letter-spacing: 0.05em;
+  color: #000000 !important;
+}
+.receipt-sub {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-bottom: 2px;
+  font-weight: bold;
+}
+.receipt-address, .receipt-contact {
+  font-size: 11px;
+  opacity: 0.8;
+}
+.receipt-divider {
+  border-top: 1px dashed #777777 !important;
+  margin: 10px 0 !important;
+  height: 0 !important;
+}
+.receipt-divider.divider-double {
+  border-top: 3px double #333333 !important;
+}
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+.receipt-row.sub-row {
+  font-size: 11px;
+  padding-left: 12px;
+  opacity: 0.9;
+}
+.receipt-empty {
+  text-align: center;
+  padding: 12px;
+  opacity: 0.7;
+  font-style: italic;
+}
+.receipt-totals {
+  font-weight: bold;
+}
+.receipt-totals .receipt-row {
+  margin-bottom: 4px;
+}
+.receipt-totals .total-grand {
+  font-size: 16px;
+  margin-top: 4px;
+}
+.receipt-address-block {
+  font-size: 11px;
+  line-height: 1.3;
+}
+.receipt-footer {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: bold;
+}
 </style>
 
 <div class="pizza-receipt-paper">
-  <div class="receipt-header">
-    <div class="receipt-brand">PIZZA SHOP</div>
-    <div class="receipt-sub">- Freshly Baked For You -</div>
-    <div class="receipt-address">742 Evergreen Terrace, Springfield</div>
-    <div class="receipt-contact">CONTACT NO: 555-0199</div>
-  </div>
-  
-  <div class="receipt-divider"></div>
-  
-  <div class="receipt-meta">
-    ${metaHtml}
-  </div>
-  
-  <div class="receipt-divider"></div>
-  
-  <div class="receipt-items">
-    ${itemsHtml}
-  </div>
-  
-  <div class="receipt-divider"></div>
-  
-  <div class="receipt-totals">
-    <div class="receipt-row">
-      <span>SUBTOTAL:</span>
-      <span>$${subtotal.toFixed(2)}</span>
-    </div>
-    ${total > 0 && isDelivery ? `
-    <div class="receipt-row">
-      <span>DELIVERY FEE:</span>
-      <span>$${deliveryFee.toFixed(2)}</span>
-    </div>
-    ` : ''}
-    ${total > 0 ? `
-    <div class="receipt-row">
-      <span>TAX (8%):</span>
-      <span>$${tax.toFixed(2)}</span>
-    </div>
-    ` : ''}
-    
-    <div class="receipt-divider divider-double"></div>
-    
-    <div class="receipt-row total-grand">
-      <span>TOTAL:</span>
-      <span>$${total.toFixed(2)}</span>
-    </div>
-  </div>
-  
-  ${addressHtml}
-  ${instructionsHtml}
-  ${etaHtml}
-  
-  <div class="receipt-footer">
-    THANK YOU. VISIT AGAIN.<br/>
-    THANK YOU
-  </div>
+<div class="receipt-header">
+<div class="receipt-brand">PIZZA SHOP</div>
+<div class="receipt-sub">- Freshly Baked For You -</div>
+<div class="receipt-address">742 Evergreen Terrace, Springfield</div>
+<div class="receipt-contact">CONTACT NO: 555-0199</div>
+</div>
+
+<div class="receipt-divider"></div>
+
+<div class="receipt-meta">
+${metaHtml}
+</div>
+
+<div class="receipt-divider"></div>
+
+<div class="receipt-items">
+${itemsHtml}
+</div>
+
+<div class="receipt-divider"></div>
+
+<div class="receipt-totals">
+<div class="receipt-row">
+<span>SUBTOTAL:</span>
+<span>$${subtotal.toFixed(2)}</span>
+</div>
+${total > 0 && isDelivery ? `
+<div class="receipt-row">
+<span>DELIVERY FEE:</span>
+<span>$${deliveryFee.toFixed(2)}</span>
+</div>
+` : ''}
+${total > 0 ? `
+<div class="receipt-row">
+<span>TAX (8%):</span>
+<span>$${tax.toFixed(2)}</span>
+</div>
+` : ''}
+
+<div class="receipt-divider divider-double"></div>
+
+<div class="receipt-row total-grand">
+<span>TOTAL:</span>
+<span>$${total.toFixed(2)}</span>
+</div>
+</div>
+
+${addressHtml}
+${instructionsHtml}
+${etaHtml}
+
+<div class="receipt-footer">
+THANK YOU. VISIT AGAIN.<br/>
+THANK YOU
+</div>
 </div>
 `;
 

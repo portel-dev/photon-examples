@@ -227,8 +227,8 @@
       ],
       "category": "UI",
       "source": "../pizza-shop.photon.ts",
-      "hash": "sha256:1a5ebd1ce59759bc36fe3a40d2f7c095eb692d28de51f85deefc2e18f520948f",
-      "contentHash": "sha256:1a5ebd1ce59759bc36fe3a40d2f7c095eb692d28de51f85deefc2e18f520948f",
+      "hash": "sha256:84471caf322d5f197b567c893897b1325fce9351c35553585f304d8aabcc46b7",
+      "contentHash": "sha256:84471caf322d5f197b567c893897b1325fce9351c35553585f304d8aabcc46b7",
       "tools": [
         "browseMenu",
         "recommend",
