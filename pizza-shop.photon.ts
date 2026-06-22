@@ -599,26 +599,23 @@ Format your response as a valid JSON object. Do not include markdown formatting 
   /**
    * Get cart status
    * @autorun
-   * @format kv
+   * @format article
    */
   async cartStatus() {
     const itemCount = this.cart.reduce((sum, i) => sum + i.quantity, 0);
     const total = this.calculateTotal();
-
-    if (itemCount === 0) {
-      return {
-        '🛒 Status': 'Empty',
-        '💰 Total': '$0.00'
-      };
-    }
+    const bill = this.formatCartAsBill('Cart Status');
 
     return {
-      '🛒 Total Items': itemCount,
-      '💰 Subtotal': `$${total.toFixed(2)}`,
-      '🍕 In Cart': this.cart.map(i => {
-        const toppingsStr = i.extraToppings.length > 0 ? ` (+${i.extraToppings.join(', ')})` : '';
-        return `${i.quantity}x ${i.pizza.name} (${i.size.charAt(0).toUpperCase() + i.size.slice(1)})${toppingsStr}`;
-      }).join(', ')
+      items: itemCount,
+      total: total,
+      pizzas: this.cart.map(i => ({
+        name: i.pizza.name,
+        size: i.size,
+        quantity: i.quantity,
+        extraToppings: i.extraToppings
+      })),
+      text: bill
     };
   }
 
