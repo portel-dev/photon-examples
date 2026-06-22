@@ -604,7 +604,7 @@ Format your response as a valid JSON object. Do not include markdown formatting 
   async cartStatus() {
     const itemCount = this.cart.reduce((sum, i) => sum + i.quantity, 0);
     const total = this.calculateTotal();
-    const bill = this.formatCartAsBill('Cart Status');
+    const bill = this.formatCartAsBill('');
 
     return {
       items: itemCount,
@@ -657,7 +657,10 @@ Format your response as a valid JSON object. Do not include markdown formatting 
     const total = subtotal > 0 ? subtotal + deliveryFee + tax : 0;
     const orderDate = new Date().toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
 
-    let bill = `### 🍕 ${title}\n\n`;
+    let bill = '';
+    if (title) {
+      bill += `### 🍕 ${title}\n\n`;
+    }
     bill += `\`\`\`text\n`;
     bill += `========================================\n`;
     bill += `              PIZZA SHOP                \n`;
