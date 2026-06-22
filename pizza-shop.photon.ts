@@ -188,7 +188,7 @@ export default class PizzaShop {
         `Choose size for ${pizza.name}:`,
         [
           { value: 'small', label: 'Small (10")', description: `$${(pizza.price * 0.8).toFixed(2)}` },
-          { value: 'medium', label: 'Medium (12")', description: `$${pizza.price.toFixed(2)}` },
+          { value: 'medium', label: 'Medium (12")', description: `$${pizza.price.toFixed(2)}`, selected: true },
           { value: 'large', label: 'Large (14")', description: `$${(pizza.price * 1.3).toFixed(2)}` }
         ],
         { layout: 'list' }
@@ -208,7 +208,7 @@ export default class PizzaShop {
       // Add to cart
       this.cart.push({
         pizza,
-        size: size as 'small' | 'medium' | 'large',
+        size: (size || 'medium') as 'small' | 'medium' | 'large',
         quantity: 1,
         extraToppings: extras || []
       });
@@ -391,7 +391,7 @@ Format your response as a valid JSON object. Do not include markdown formatting 
       // Add to cart
       this.cart.push({
         pizza,
-        size: size as 'small' | 'medium' | 'large',
+        size: (size || parsedSize || 'medium') as 'small' | 'medium' | 'large',
         quantity: 1,
         extraToppings: extras || []
       });
@@ -493,7 +493,7 @@ Format your response as a valid JSON object. Do not include markdown formatting 
             ],
             { layout: 'list' }
           );
-          item.size = size as 'small' | 'medium' | 'large';
+          item.size = (size || item.size || 'medium') as 'small' | 'medium' | 'large';
 
           const extras: string[] = yield io.ask.select(
             `Add extra toppings to ${item.pizza.name}?`,
