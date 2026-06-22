@@ -143,80 +143,89 @@ export default class PizzaShop {
    *
    * @format markdown
    */
-  async *browseMenu() {
+  async *menu() {
     yield io.emit.status('Loading menu...');
 
     // Get unique categories for filter buttons
     const categories = ['All', 'Classic', 'Specialty', 'Vegetarian', 'Meat Lovers'];
 
-    // Present menu with filters and search
-    const selected: string[] = yield io.ask.select(
-      '🍕 Welcome to Pizza Shop! Select pizzas to add to your order:',
-      this.menu.map(pizza => ({
-        value: pizza.id,
-        label: pizza.name,
-        description: pizza.description,
-        image: pizza.image,
-        price: pizza.price,
-        badge: pizza.popular ? 'Popular' : pizza.spicy ? '🌶️ Spicy' : undefined,
-        badgeType: pizza.popular ? 'info' as const : pizza.spicy ? 'error' as const : 'default' as const,
-        category: pizza.category.replace('-', ' ')
-      })),
-      {
-        multi: true,
-        layout: 'list',
-        filters: categories,
-        filterField: 'category',
-        searchable: true,
-        searchPlaceholder: 'Search pizzas...'
-      }
-    );
-
-    if (!selected || selected.length === 0) {
-      return { message: 'No pizzas selected. Browse our menu anytime!' };
-    }
-
-    // For each selected pizza, ask for customization
-    for (const pizzaId of selected) {
-      const pizza = this.menu.find(p => p.id === pizzaId);
-      if (!pizza) continue;
-
-      yield io.emit.status(`Customizing ${pizza.name}...`);
-
-      // Ask for size
-      const size: string = yield io.ask.select(
-        `Choose size for ${pizza.name}:`,
-        [
-          { value: 'small', label: 'Small (10")', description: `$${(pizza.price * 0.8).toFixed(2)}` },
-          { value: 'medium', label: 'Medium (12")', description: `$${pizza.price.toFixed(2)}`, selected: true },
-          { value: 'large', label: 'Large (14")', description: `$${(pizza.price * 1.3).toFixed(2)}` }
-        ],
-        { layout: 'list' }
-      );
-
-      // Ask for extra toppings
-      const extras: string[] = yield io.ask.select(
-        `Add extra toppings to ${pizza.name}? (+$0.75-$2.00 each)`,
-        this.extraToppings.map(t => ({
-          value: t.id,
-          label: t.name,
-          description: `+$${t.price.toFixed(2)}`
+    try {
+      // Present menu with filters and search
+      const selected: string[] = yield io.ask.select(
+        '🍕 Welcome to Pizza Shop! Select pizzas to add to your order:',
+        this.menu.map(pizza => ({
+          value: pizza.id,
+          label: pizza.name,
+          description: pizza.description,
+          image: pizza.image,
+          price: pizza.price,
+          badge: pizza.popular ? 'Popular' : pizza.spicy ? '🌶️ Spicy' : undefined,
+          badgeType: pizza.popular ? 'info' as const : pizza.spicy ? 'error' as const : 'default' as const,
+          category: pizza.category.replace('-', ' ')
         })),
-        { multi: true, layout: 'list' }
+        {
+          multi: true,
+          layout: 'list',
+          filters: categories,
+          filterField: 'category',
+          searchable: true,
+          searchPlaceholder: 'Search pizzas...'
+        }
       );
 
-      // Add to cart
-      this.cart.push({
-        pizza,
-        size: (size || 'medium') as 'small' | 'medium' | 'large',
-        quantity: 1,
-        extraToppings: extras || []
-      });
+      if (!selected || selected.length === 0) {
+        return { message: 'No pizzas selected. Browse our menu anytime!' };
+      }
+
+      // For each selected pizza, ask for customization
+      for (const pizzaId of selected) {
+        const pizza = this.menu.find(p => p.id === pizzaId);
+        if (!pizza) continue;
+
+        yield io.emit.status(`Customizing ${pizza.name}...`);
+
+        // Ask for size
+        const size: string = yield io.ask.select(
+          `Choose size for ${pizza.name}:`,
+          [
+            { value: 'small', label: 'Small (10")', description: `$${(pizza.price * 0.8).toFixed(2)}` },
+            { value: 'medium', label: 'Medium (12")', description: `$${pizza.price.toFixed(2)}`, selected: true },
+            { value: 'large', label: 'Large (14")', description: `$${(pizza.price * 1.3).toFixed(2)}` }
+          ],
+          { layout: 'list' }
+        );
+
+        // Ask for extra toppings
+        const extras: string[] = yield io.ask.select(
+          `Add extra toppings to ${pizza.name}? (+$0.75-$2.00 each)`,
+          this.extraToppings.map(t => ({
+            value: t.id,
+            label: t.name,
+            description: `+$${t.price.toFixed(2)}`
+          })),
+          { multi: true, layout: 'list' }
+        );
+
+        // Add to cart
+        this.cart.push({
+          pizza,
+          size: (size || 'medium') as 'small' | 'medium' | 'large',
+          quantity: 1,
+          extraToppings: extras || []
+        });
+      }
+
+      yield io.emit.toast(`Added ${selected.length} pizza(s) to cart!`, 'success');
+
+      const status = await this.status('Pizzas Added!');
+      return status.text;
+    } catch (e) {
+      // Fallback: Return static markdown of the menu if elicitation is not supported
+      const menuMarkdown = this.menu.map(pizza => 
+        `- **${pizza.name}** ($${pizza.price.toFixed(2)})${pizza.popular ? ' ⭐ Popular' : ''}${pizza.spicy ? ' 🌶️ Spicy' : ''}\n  _${pizza.description}_`
+      ).join('\n');
+      return `### 🍕 Pizza Shop Menu\n\n${menuMarkdown}\n\n*Note: Interactive selection is only available in supported clients (like Beam UI).*`;
     }
-
-    yield io.emit.toast(`Added ${selected.length} pizza(s) to cart!`, 'success');
-
-    return this.formatCartAsBill('Pizzas Added!');
   }
 
   /**
@@ -338,68 +347,77 @@ Format your response as a valid JSON object. Do not include markdown formatting 
 
     yield io.emit.status(`Found ${recommendations.length} recommendations!`);
 
-    // Present recommendations
-    const selected: string[] = yield io.ask.select(
-      `Based on "${params.preferences}", here are my top picks:`,
-      recommendations.map(pizza => ({
-        value: pizza.id,
-        label: pizza.name,
-        description: pizza.description,
-        image: pizza.image,
-        price: pizza.price,
-        badge: pizza.popular ? '⭐ Recommended' : undefined,
-        badgeType: 'success' as const,
-        category: pizza.category
-      })),
-      { multi: true, layout: 'list' }
-    );
-
-    if (!selected || selected.length === 0) {
-      return { message: 'No pizzas selected. Try browsing the full menu!' };
-    }
-
-    // For each selected pizza, ask for customization
-    for (const pizzaId of selected) {
-      const pizza = this.menu.find(p => p.id === pizzaId);
-      if (!pizza) continue;
-
-      yield io.emit.status(`Customizing ${pizza.name}...`);
-
-      // Ask for size with default parsed size pre-selected
-      const size: string = yield io.ask.select(
-        `Choose size for recommended ${pizza.name}:`,
-        [
-          { value: 'small', label: 'Small (10")', description: `$${(pizza.price * 0.8).toFixed(2)}`, selected: parsedSize === 'small' },
-          { value: 'medium', label: 'Medium (12")', description: `$${pizza.price.toFixed(2)}`, selected: parsedSize === 'medium' },
-          { value: 'large', label: 'Large (14")', description: `$${(pizza.price * 1.3).toFixed(2)}`, selected: parsedSize === 'large' }
-        ],
-        { layout: 'list' }
-      );
-
-      // Ask for extra toppings with default parsed toppings pre-selected
-      const extras: string[] = yield io.ask.select(
-        `Add extra toppings to ${pizza.name}? (+$0.75-$2.00 each)`,
-        this.extraToppings.map(t => ({
-          value: t.id,
-          label: t.name,
-          description: `+$${t.price.toFixed(2)}`,
-          selected: parsedExtraToppings.includes(t.id)
+    try {
+      // Present recommendations
+      const selected: string[] = yield io.ask.select(
+        `Based on "${params.preferences}", here are my top picks:`,
+        recommendations.map(pizza => ({
+          value: pizza.id,
+          label: pizza.name,
+          description: pizza.description,
+          image: pizza.image,
+          price: pizza.price,
+          badge: pizza.popular ? '⭐ Recommended' : undefined,
+          badgeType: 'success' as const,
+          category: pizza.category
         })),
         { multi: true, layout: 'list' }
       );
 
-      // Add to cart
-      this.cart.push({
-        pizza,
-        size: (size || parsedSize || 'medium') as 'small' | 'medium' | 'large',
-        quantity: 1,
-        extraToppings: extras || []
-      });
+      if (!selected || selected.length === 0) {
+        return { message: 'No pizzas selected. Try browsing the full menu!' };
+      }
+
+      // For each selected pizza, ask for customization
+      for (const pizzaId of selected) {
+        const pizza = this.menu.find(p => p.id === pizzaId);
+        if (!pizza) continue;
+
+        yield io.emit.status(`Customizing ${pizza.name}...`);
+
+        // Ask for size with default parsed size pre-selected
+        const size: string = yield io.ask.select(
+          `Choose size for recommended ${pizza.name}:`,
+          [
+            { value: 'small', label: 'Small (10")', description: `$${(pizza.price * 0.8).toFixed(2)}`, selected: parsedSize === 'small' },
+            { value: 'medium', label: 'Medium (12")', description: `$${pizza.price.toFixed(2)}`, selected: parsedSize === 'medium' },
+            { value: 'large', label: 'Large (14")', description: `$${(pizza.price * 1.3).toFixed(2)}`, selected: parsedSize === 'large' }
+          ],
+          { layout: 'list' }
+        );
+
+        // Ask for extra toppings with default parsed toppings pre-selected
+        const extras: string[] = yield io.ask.select(
+          `Add extra toppings to ${pizza.name}? (+$0.75-$2.00 each)`,
+          this.extraToppings.map(t => ({
+            value: t.id,
+            label: t.name,
+            description: `+$${t.price.toFixed(2)}`,
+            selected: parsedExtraToppings.includes(t.id)
+          })),
+          { multi: true, layout: 'list' }
+        );
+
+        // Add to cart
+        this.cart.push({
+          pizza,
+          size: (size || parsedSize || 'medium') as 'small' | 'medium' | 'large',
+          quantity: 1,
+          extraToppings: extras || []
+        });
+      }
+
+      yield io.emit.toast(`Added ${selected.length} recommended pizza(s) with toppings!`, 'success');
+
+      const status = await this.status('Pizzas Added!');
+      return status.text;
+    } catch (e) {
+      // Fallback: Return static recommendation markdown
+      const recsMarkdown = recommendations.map(pizza => 
+        `- **${pizza.name}** ($${pizza.price.toFixed(2)})${pizza.popular ? ' ⭐ Recommended' : ''}\n  _${pizza.description}_`
+      ).join('\n');
+      return `### 🍕 Recommended Pizzas for "${params.preferences}"\n\n${recsMarkdown}\n\n*Note: To customize and add to your cart, please use the Beam UI.*`;
     }
-
-    yield io.emit.toast(`Added ${selected.length} recommended pizza(s) with toppings!`, 'success');
-
-    return this.formatCartAsBill('Pizzas Added!');
   }
 
   /**
@@ -409,109 +427,118 @@ Format your response as a valid JSON object. Do not include markdown formatting 
    *
    * @format markdown
    */
-  async *viewCart() {
+  async *cart() {
     if (this.cart.length === 0) {
       yield io.emit.toast('Your cart is empty!', 'info');
       return { items: [], total: 0, message: 'Add some pizzas first!' };
     }
 
-    while (true) {
-      const total = this.calculateTotal();
-      const options = [
-        ...this.cart.map((item, idx) => {
-          const toppingsStr = item.extraToppings.length > 0 ? ` (+${item.extraToppings.join(', ')})` : '';
-          return {
-            value: `edit:${idx}`,
-            label: `${item.pizza.name} (${item.size.charAt(0).toUpperCase() + item.size.slice(1)})${toppingsStr}`,
-            description: `Qty: ${item.quantity} | Price: $${this.calculateItemPrice(item).toFixed(2)} (Click to edit/remove)`,
-            image: item.pizza.image
-          };
-        }),
-        { value: 'checkout', label: '💳 Proceed to Checkout', description: `Place your order (Total: $${total.toFixed(2)})` },
-        { value: 'clear', label: '🗑️ Empty Cart', description: 'Remove all items from your cart' },
-        { value: 'back', label: '⬅️ Back to Menu', description: 'Browse or add more pizzas' }
-      ];
+    try {
+      while (true) {
+        const total = this.calculateTotal();
+        const options = [
+          ...this.cart.map((item, idx) => {
+            const toppingsStr = item.extraToppings.length > 0 ? ` (+${item.extraToppings.join(', ')})` : '';
+            return {
+              value: `edit:${idx}`,
+              label: `${item.pizza.name} (${item.size.charAt(0).toUpperCase() + item.size.slice(1)})${toppingsStr}`,
+              description: `Qty: ${item.quantity} | Price: $${this.calculateItemPrice(item).toFixed(2)} (Click to edit/remove)`,
+              image: item.pizza.image
+            };
+          }),
+          { value: 'checkout', label: '💳 Proceed to Checkout', description: `Place your order (Total: $${total.toFixed(2)})` },
+          { value: 'clear', label: '🗑️ Empty Cart', description: 'Remove all items from your cart' },
+          { value: 'back', label: '⬅️ Back to Menu', description: 'Browse or add more pizzas' }
+        ];
 
-      const choice: string = yield io.ask.select(
-        `🛒 Manage Your Cart ($${total.toFixed(2)}):`,
-        options,
-        { layout: 'list' }
-      );
-
-      if (choice === 'back' || !choice) {
-        break;
-      }
-
-      if (choice === 'checkout') {
-        return yield* this.checkout();
-      }
-
-      if (choice === 'clear') {
-        this.cart = [];
-        yield io.emit.toast('Cart emptied', 'info');
-        return this.formatCartAsBill('');
-      }
-
-      if (choice.startsWith('edit:')) {
-        const idx = parseInt(choice.split(':')[1], 10);
-        const item = this.cart[idx];
-        if (!item) continue;
-
-        const action: string = yield io.ask.select(
-          `Editing ${item.pizza.name}:`,
-          [
-            { value: 'quantity', label: '🔢 Adjust Quantity', description: `Current: ${item.quantity}` },
-            { value: 'customize', label: '🍕 Change Size / Extra Toppings', description: 'Customize toppings and size' },
-            { value: 'remove', label: '❌ Remove Item', description: 'Delete this item from cart' },
-            { value: 'cancel', label: '⬅️ Cancel', description: 'Go back to cart' }
-          ],
+        const choice: string = yield io.ask.select(
+          `🛒 Manage Your Cart ($${total.toFixed(2)}):`,
+          options,
           { layout: 'list' }
         );
 
-        if (action === 'remove') {
-          this.cart.splice(idx, 1);
-          yield io.emit.toast(`${item.pizza.name} removed`, 'info');
-          if (this.cart.length === 0) {
-            return this.formatCartAsBill('');
-          }
-        } else if (action === 'quantity') {
-          const qty: number = yield io.ask.number(
-            `Set quantity for ${item.pizza.name}:`,
-            { min: 1, max: 10, default: item.quantity }
-          );
-          if (qty > 0) {
-            item.quantity = qty;
-            yield io.emit.toast(`Quantity updated to ${qty}`, 'success');
-          }
-        } else if (action === 'customize') {
-          const size: string = yield io.ask.select(
-            `Choose size for ${item.pizza.name}:`,
+        if (choice === 'back' || !choice) {
+          break;
+        }
+
+        if (choice === 'checkout') {
+          return yield* this.checkout();
+        }
+
+        if (choice === 'clear') {
+          this.cart = [];
+          yield io.emit.toast('Cart emptied', 'info');
+          const status = await this.status('');
+          return status.text;
+        }
+
+        if (choice.startsWith('edit:')) {
+          const idx = parseInt(choice.split(':')[1], 10);
+          const item = this.cart[idx];
+          if (!item) continue;
+
+          const action: string = yield io.ask.select(
+            `Editing ${item.pizza.name}:`,
             [
-              { value: 'small', label: 'Small (10")', description: `$${(item.pizza.price * 0.8).toFixed(2)}`, selected: item.size === 'small' },
-              { value: 'medium', label: 'Medium (12")', description: `$${item.pizza.price.toFixed(2)}`, selected: item.size === 'medium' },
-              { value: 'large', label: 'Large (14")', description: `$${(item.pizza.price * 1.3).toFixed(2)}`, selected: item.size === 'large' }
+              { value: 'quantity', label: '🔢 Adjust Quantity', description: `Current: ${item.quantity}` },
+              { value: 'customize', label: '🍕 Change Size / Extra Toppings', description: 'Customize toppings and size' },
+              { value: 'remove', label: '❌ Remove Item', description: 'Delete this item from cart' },
+              { value: 'cancel', label: '⬅️ Cancel', description: 'Go back to cart' }
             ],
             { layout: 'list' }
           );
-          item.size = (size || item.size || 'medium') as 'small' | 'medium' | 'large';
 
-          const extras: string[] = yield io.ask.select(
-            `Add extra toppings to ${item.pizza.name}?`,
-            this.extraToppings.map(t => ({
-              value: t.id,
-              label: t.name,
-              description: `+$${t.price.toFixed(2)}`,
-              selected: item.extraToppings.includes(t.id)
-            })),
-            { multi: true, layout: 'list' }
-          );
-          item.extraToppings = extras || [];
-          yield io.emit.toast('Customization updated', 'success');
+          if (action === 'remove') {
+            this.cart.splice(idx, 1);
+            yield io.emit.toast(`${item.pizza.name} removed`, 'info');
+            if (this.cart.length === 0) {
+              const status = await this.status('');
+              return status.text;
+            }
+          } else if (action === 'quantity') {
+            const qty: number = yield io.ask.number(
+              `Set quantity for ${item.pizza.name}:`,
+              { min: 1, max: 10, default: item.quantity }
+            );
+            if (qty > 0) {
+              item.quantity = qty;
+              yield io.emit.toast(`Quantity updated to ${qty}`, 'success');
+            }
+          } else if (action === 'customize') {
+            const size: string = yield io.ask.select(
+              `Choose size for ${item.pizza.name}:`,
+              [
+                { value: 'small', label: 'Small (10")', description: `$${(item.pizza.price * 0.8).toFixed(2)}`, selected: item.size === 'small' },
+                { value: 'medium', label: 'Medium (12")', description: `$${item.pizza.price.toFixed(2)}`, selected: item.size === 'medium' },
+                { value: 'large', label: 'Large (14")', description: `$${(item.pizza.price * 1.3).toFixed(2)}`, selected: item.size === 'large' }
+              ],
+              { layout: 'list' }
+            );
+            item.size = (size || item.size || 'medium') as 'small' | 'medium' | 'large';
+
+            const extras: string[] = yield io.ask.select(
+              `Add extra toppings to ${item.pizza.name}?`,
+              this.extraToppings.map(t => ({
+                value: t.id,
+                label: t.name,
+                description: `+$${t.price.toFixed(2)}`,
+                selected: item.extraToppings.includes(t.id)
+              })),
+              { multi: true, layout: 'list' }
+            );
+            item.extraToppings = extras || [];
+            yield io.emit.toast('Customization updated', 'success');
+          }
         }
       }
+    } catch (e) {
+      // Fallback: Display the styled bill receipt if elicitation is not supported
+      const status = await this.status('Your Cart');
+      return status.text;
     }
 
-    return this.formatCartAsBill('Your Cart Updated!');
+    const status = await this.status('Your Cart Updated!');
+    return status.text;
   }
 
   /**
@@ -527,131 +554,136 @@ Format your response as a valid JSON object. Do not include markdown formatting 
       return '### ⚠️ Cart is Empty!\n\nPlease add some pizzas to your cart before checking out.';
     }
 
-    // 1. Choose Order Type
-    const orderType: 'delivery' | 'pickup' = yield io.ask.select('🥡 Select Order Type', [
-      { value: 'delivery', label: '🚗 Delivery (+$3.99)', description: 'Delivered to your door in 30-45 mins' },
-      { value: 'pickup', label: '🥡 Store Pickup ($0.00)', description: 'Ready at our main branch in 15 mins' }
-    ]);
+    try {
+      // 1. Choose Order Type
+      const orderType: 'delivery' | 'pickup' = yield io.ask.select('🥡 Select Order Type', [
+        { value: 'delivery', label: '🚗 Delivery (+$3.99)', description: 'Delivered to your door in 30-45 mins' },
+        { value: 'pickup', label: '🥡 Store Pickup ($0.00)', description: 'Ready at our main branch in 15 mins' }
+      ]);
 
-    // 2. Choose Payment Method
-    const paymentMethod: 'card' | 'cod' = yield io.ask.select('💳 Select Payment Method', [
-      { value: 'card', label: '💳 Credit / Debit Card', description: 'Pay securely online' },
-      { value: 'cod', label: orderType === 'pickup' ? '💵 Pay on Pickup' : '💵 Cash on Delivery', description: 'Pay with cash or card upon receipt' }
-    ]);
+      // 2. Choose Payment Method
+      const paymentMethod: 'card' | 'cod' = yield io.ask.select('💳 Select Payment Method', [
+        { value: 'card', label: '💳 Credit / Debit Card', description: 'Pay securely online' },
+        { value: 'cod', label: orderType === 'pickup' ? '💵 Pay on Pickup' : '💵 Cash on Delivery', description: 'Pay with cash or card upon receipt' }
+      ]);
 
-    // 3. Collect Card Details if card selected
-    let cardInfo = null;
-    if (paymentMethod === 'card') {
-      cardInfo = yield io.ask.form('💳 Card Details', {
-        type: 'object',
-        properties: {
-          cardholder: { type: 'string', title: 'Cardholder Name' },
-          cardNumber: { type: 'string', title: 'Card Number (16 digits)' },
-          expiry: { type: 'string', title: 'Expiry Date (MM/YY)' },
-          cvv: { type: 'string', title: 'CVV' }
-        },
-        required: ['cardholder', 'cardNumber', 'expiry', 'cvv']
+      // 3. Collect Card Details if card selected
+      let cardInfo = null;
+      if (paymentMethod === 'card') {
+        cardInfo = yield io.ask.form('💳 Card Details', {
+          type: 'object',
+          properties: {
+            cardholder: { type: 'string', title: 'Cardholder Name' },
+            cardNumber: { type: 'string', title: 'Card Number (16 digits)' },
+            expiry: { type: 'string', title: 'Expiry Date (MM/YY)' },
+            cvv: { type: 'string', title: 'CVV' }
+          },
+          required: ['cardholder', 'cardNumber', 'expiry', 'cvv']
+        });
+      }
+
+      // 4. Collect customer and location details
+      let customerName = '';
+      let customerPhone = '';
+      let addressStr = '';
+      let instructions = '';
+
+      if (orderType === 'delivery') {
+        const delivery = yield io.ask.form('🚗 Delivery Address', {
+          type: 'object',
+          properties: {
+            name: { type: 'string', title: 'Your Name' },
+            phone: { type: 'string', title: 'Phone Number' },
+            address: { type: 'string', title: 'Street Address' },
+            apt: { type: 'string', title: 'Apt/Suite (optional)' },
+            city: { type: 'string', title: 'City' },
+            zip: { type: 'string', title: 'ZIP Code' },
+            instructions: { type: 'string', title: 'Delivery Instructions (optional)' }
+          },
+          required: ['name', 'phone', 'address', 'city', 'zip']
+        });
+        customerName = delivery.name;
+        customerPhone = delivery.phone;
+        addressStr = `${delivery.address}${delivery.apt ? ', ' + delivery.apt : ''}\n${delivery.city}, ${delivery.zip}`;
+        instructions = delivery.instructions;
+      } else {
+        const pickup = yield io.ask.form('🥡 Pickup Contact', {
+          type: 'object',
+          properties: {
+            name: { type: 'string', title: 'Your Name' },
+            phone: { type: 'string', title: 'Phone Number' },
+            pickupTime: { type: 'string', title: 'Pickup Time (ASAP / Specific time)' }
+          },
+          required: ['name', 'phone']
+        });
+        customerName = pickup.name;
+        customerPhone = pickup.phone;
+        addressStr = '🥡 Store Pickup: 742 Evergreen Terrace, Springfield';
+        instructions = `Pickup Time: ${pickup.pickupTime || 'ASAP'}`;
+      }
+
+      // 5. Generate temporary order details for confirmation
+      const tempReceipt = this.formatCartAsBill('Confirm Order Details', {
+        orderType: orderType === 'delivery' ? 'Delivery' : 'Pickup',
+        paymentMethod: paymentMethod === 'card' ? 'Credit Card' : (orderType === 'pickup' ? 'Pay on Pickup' : 'Cash on Delivery'),
+        customerName,
+        customerPhone,
+        deliveryAddress: addressStr,
+        instructions
       });
-    }
 
-    // 4. Collect customer and location details
-    let customerName = '';
-    let customerPhone = '';
-    let addressStr = '';
-    let instructions = '';
+      const confirmed: boolean = yield io.ask.confirm(
+        `${tempReceipt}\n\nDo you want to confirm and place this order?`
+      );
 
-    if (orderType === 'delivery') {
-      const delivery = yield io.ask.form('🚗 Delivery Address', {
-        type: 'object',
-        properties: {
-          name: { type: 'string', title: 'Your Name' },
-          phone: { type: 'string', title: 'Phone Number' },
-          address: { type: 'string', title: 'Street Address' },
-          apt: { type: 'string', title: 'Apt/Suite (optional)' },
-          city: { type: 'string', title: 'City' },
-          zip: { type: 'string', title: 'ZIP Code' },
-          instructions: { type: 'string', title: 'Delivery Instructions (optional)' }
-        },
-        required: ['name', 'phone', 'address', 'city', 'zip']
-      });
-      customerName = delivery.name;
-      customerPhone = delivery.phone;
-      addressStr = `${delivery.address}${delivery.apt ? ', ' + delivery.apt : ''}\n${delivery.city}, ${delivery.zip}`;
-      instructions = delivery.instructions;
-    } else {
-      const pickup = yield io.ask.form('🥡 Pickup Contact', {
-        type: 'object',
-        properties: {
-          name: { type: 'string', title: 'Your Name' },
-          phone: { type: 'string', title: 'Phone Number' },
-          pickupTime: { type: 'string', title: 'Pickup Time (ASAP / Specific time)' }
-        },
-        required: ['name', 'phone']
-      });
-      customerName = pickup.name;
-      customerPhone = pickup.phone;
-      addressStr = '🥡 Store Pickup: 742 Evergreen Terrace, Springfield';
-      instructions = `Pickup Time: ${pickup.pickupTime || 'ASAP'}`;
-    }
+      if (!confirmed) {
+        yield io.emit.toast('Checkout cancelled', 'info');
+        return '### ❌ Checkout Cancelled\n\nYour order has not been placed. Feel free to continue customizing or browse the menu!';
+      }
 
-    // 5. Generate temporary order details for confirmation
-    const tempReceipt = this.formatCartAsBill('Confirm Order Details', {
-      orderType: orderType === 'delivery' ? 'Delivery' : 'Pickup',
-      paymentMethod: paymentMethod === 'card' ? 'Credit Card' : (orderType === 'pickup' ? 'Pay on Pickup' : 'Cash on Delivery'),
-      customerName,
-      customerPhone,
-      deliveryAddress: addressStr,
-      instructions
-    });
+      // 6. Process payment & order
+      yield io.emit.progress(0.2, 'Validating order...');
+      await this.delay(500);
 
-    const confirmed: boolean = yield io.ask.confirm(
-      `${tempReceipt}\n\nDo you want to confirm and place this order?`
-    );
+      if (paymentMethod === 'card') {
+        yield io.emit.progress(0.5, 'Authorizing card payment...');
+        await this.delay(800);
+      } else {
+        yield io.emit.progress(0.5, 'Securing order allocation...');
+        await this.delay(600);
+      }
 
-    if (!confirmed) {
-      yield io.emit.toast('Checkout cancelled', 'info');
-      return '### ❌ Checkout Cancelled\n\nYour order has not been placed. Feel free to continue customizing or browse the menu!';
-    }
-
-    // 6. Process payment & order
-    yield io.emit.progress(0.2, 'Validating order...');
-    await this.delay(500);
-
-    if (paymentMethod === 'card') {
-      yield io.emit.progress(0.5, 'Authorizing card payment...');
-      await this.delay(800);
-    } else {
-      yield io.emit.progress(0.5, 'Securing order allocation...');
+      yield io.emit.progress(0.8, 'Sending to kitchen...');
       await this.delay(600);
+
+      yield io.emit.progress(1.0, 'Order confirmed!');
+
+      const orderNumber = `PZZ-${Date.now().toString(36).toUpperCase()}`;
+      const etaMin = orderType === 'delivery' ? 35 : 15;
+      const eta = new Date(Date.now() + etaMin * 60 * 1000);
+      const etaStr = eta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      const finalReceipt = (await this.status('Order Confirmed!', {
+        orderNumber,
+        orderType: orderType === 'delivery' ? 'Delivery' : 'Pickup',
+        paymentMethod: paymentMethod === 'card' ? 'Credit Card' : (orderType === 'pickup' ? 'Pay on Pickup' : 'Cash on Delivery'),
+        etaStr,
+        customerName,
+        customerPhone,
+        deliveryAddress: addressStr,
+        instructions
+      })).text;
+
+      // Clear cart
+      this.cart = [];
+
+      yield io.emit.toast('🎉 Order placed successfully!', 'success');
+
+      return finalReceipt;
+    } catch (e) {
+      const status = await this.status('Your Cart');
+      return `### 💳 Checkout Error\n\nInteractive checkout is not supported in this client. Please view your cart or checkout using the Beam UI.\n\n${status.text}`;
     }
-
-    yield io.emit.progress(0.8, 'Sending to kitchen...');
-    await this.delay(600);
-
-    yield io.emit.progress(1.0, 'Order confirmed!');
-
-    const orderNumber = `PZZ-${Date.now().toString(36).toUpperCase()}`;
-    const etaMin = orderType === 'delivery' ? 35 : 15;
-    const eta = new Date(Date.now() + etaMin * 60 * 1000);
-    const etaStr = eta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    const finalReceipt = this.formatCartAsBill('Order Confirmed!', {
-      orderNumber,
-      orderType: orderType === 'delivery' ? 'Delivery' : 'Pickup',
-      paymentMethod: paymentMethod === 'card' ? 'Credit Card' : (orderType === 'pickup' ? 'Pay on Pickup' : 'Cash on Delivery'),
-      etaStr,
-      customerName,
-      customerPhone,
-      deliveryAddress: addressStr,
-      instructions
-    });
-
-    // Clear cart
-    this.cart = [];
-
-    yield io.emit.toast('🎉 Order placed successfully!', 'success');
-
-    return finalReceipt;
   }
 
   /**
@@ -659,10 +691,22 @@ Format your response as a valid JSON object. Do not include markdown formatting 
    * @autorun
    * @format article {@columns 1}
    */
-  async cartStatus() {
+  async status(
+    title = '',
+    extraFields?: {
+      deliveryAddress?: string;
+      etaStr?: string;
+      instructions?: string;
+      orderNumber?: string;
+      customerName?: string;
+      customerPhone?: string;
+      orderType?: 'Delivery' | 'Pickup';
+      paymentMethod?: string;
+    }
+  ) {
     const itemCount = this.cart.reduce((sum, i) => sum + i.quantity, 0);
     const total = this.calculateTotal();
-    const bill = this.formatCartAsBill('');
+    const bill = this.formatCartAsBill(title, extraFields);
 
     return {
       items: itemCount,

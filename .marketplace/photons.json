@@ -227,14 +227,14 @@
       ],
       "category": "UI",
       "source": "../pizza-shop.photon.ts",
-      "hash": "sha256:7b1108b68b5ec52b359fedd58abbf4446789fb5ce1359920ec489dad6a7f5605",
-      "contentHash": "sha256:7b1108b68b5ec52b359fedd58abbf4446789fb5ce1359920ec489dad6a7f5605",
+      "hash": "sha256:96e41b34fdb7d0d6ce18781a8d3ddb31732c95d8ea4a7e226d926a280ac0315f",
+      "contentHash": "sha256:96e41b34fdb7d0d6ce18781a8d3ddb31732c95d8ea4a7e226d926a280ac0315f",
       "tools": [
-        "browseMenu",
+        "menu",
         "recommend",
-        "viewCart",
+        "cart",
         "checkout",
-        "cartStatus"
+        "status"
       ],
       "assets": [],
       "photonType": "streaming",

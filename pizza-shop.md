@@ -6,7 +6,7 @@ Demonstrates the AI+Human transaction workflow for food ordering: 1. AI suggests
 
 > **5 tools** · Streaming Photon · v1.0.0 · MIT
 
-**Platform Features:** `generator`
+**Platform Features:** `generator` `elicitation`
 
 ## ⚙️ Configuration
 
@@ -18,7 +18,7 @@ No configuration required.
 ## 🔧 Tools
 
 
-### `browseMenu` ⚡
+### `menu` ⚡
 
 Browse the pizza menu. Filter by category and select pizzas to add to cart.
 
@@ -45,7 +45,7 @@ Get AI pizza recommendations. Tell us your preferences and we'll suggest the per
 ---
 
 
-### `viewCart` ⚡
+### `cart` ⚡
 
 View and modify your cart. Adjust quantities, remove items, or proceed to checkout.
 
@@ -67,7 +67,7 @@ Complete your order. Review cart, enter delivery info, and place your order!
 ---
 
 
-### `cartStatus`
+### `status`
 
 Get cart status
 
@@ -88,15 +88,15 @@ flowchart LR
     subgraph pizza_shop["📦 Pizza Shop"]
         direction TB
         PHOTON((🎯))
-        T0[🌊 browseMenu (stream)]
+        T0[🌊 menu (stream)]
         PHOTON --> T0
         T1[🌊 recommend (stream)]
         PHOTON --> T1
-        T2[🌊 viewCart (stream)]
+        T2[🌊 cart (stream)]
         PHOTON --> T2
         T3[🌊 checkout (stream)]
         PHOTON --> T3
-        T4[🔧 cartStatus]
+        T4[🔧 status]
         PHOTON --> T4
     end
 ```
