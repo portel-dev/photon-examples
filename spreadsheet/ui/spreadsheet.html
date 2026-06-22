@@ -667,19 +667,19 @@
     <div class="toolbar">
         <div class="toolbar-section">
             <button class="btn" onclick="showFilePicker()" title="Browse spreadsheets">Files</button>
-            <button class="btn btn-primary" onclick="spreadsheet.newFile()">
+            <button class="btn btn-primary" onclick="ui.newFile()">
                 <span>+</span> New
             </button>
-            <button class="btn" onclick="spreadsheet.openImportModal()">
+            <button class="btn" onclick="ui.openImportModal()">
                 Import CSV
             </button>
-            <button class="btn" onclick="spreadsheet.exportCSV()">
+            <button class="btn" onclick="ui.exportCSV()">
                 Export CSV
             </button>
         </div>
         <div class="toolbar-section">
-            <button class="btn btn-icon" onclick="spreadsheet.addRow()" title="Add Row">Add Row</button>
-            <button class="btn btn-icon" onclick="spreadsheet.addColumn()" title="Add Column">Add Col</button>
+            <button class="btn btn-icon" onclick="ui.addRow()" title="Add Row">Add Row</button>
+            <button class="btn btn-icon" onclick="ui.addColumn()" title="Add Column">Add Col</button>
         </div>
         <div class="toolbar-section" style="border-right:none;margin-left:auto;">
             <input type="text" id="searchInput" placeholder="Search..." style="background:var(--bg-primary);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-size:12px;color:var(--text-primary);width:160px;outline:none;" autocomplete="off">
@@ -717,7 +717,7 @@
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <span class="sidebar-title">Workbook</span>
-                <button class="btn-icon" onclick="spreadsheet.toggleSidebar()">←</button>
+                <button class="btn-icon" onclick="ui.toggleSidebar()">←</button>
             </div>
 
             <div class="sidebar-section">
@@ -727,7 +727,7 @@
                         <span>📄 default.csv</span>
                     </div>
                 </div>
-                <button class="btn" style="width: 100%; margin-top: 8px; justify-content: center; font-size: 11px;" onclick="spreadsheet.newSheet()">
+                <button class="btn" style="width: 100%; margin-top: 8px; justify-content: center; font-size: 11px;" onclick="ui.newSheet()">
                     + New Sheet
                 </button>
             </div>
@@ -735,7 +735,7 @@
             <div class="sidebar-section">
                 <div class="sidebar-section-title">Views</div>
                 <div class="view-list" id="viewList">
-                    <div class="view-item active" onclick="spreadsheet.switchView('grid')">
+                    <div class="view-item active" onclick="ui.switchView('grid')">
                         <span>⊞</span> Grid view
                     </div>
                 </div>
@@ -744,14 +744,14 @@
 
         <!-- Sheet Wrapper -->
         <div class="sheet-wrapper">
-            <button class="sidebar-toggle" onclick="spreadsheet.toggleSidebar()" id="sidebarToggle">▶</button>
+            <button class="sidebar-toggle" onclick="ui.toggleSidebar()" id="sidebarToggle">▶</button>
             
             <!-- Tabs Bar -->
             <div class="tabs-container" id="tabBar">
-                <div class="tab active" onclick="spreadsheet.switchSheet('default')">
+                <div class="tab active" onclick="ui.switchSheet('default')">
                     <span>default</span>
                 </div>
-                <div class="btn-new-tab" onclick="spreadsheet.newSheet()" title="New Sheet">+</div>
+                <div class="btn-new-tab" onclick="ui.newSheet()" title="New Sheet">+</div>
             </div>
 
             <div class="sheet-container" id="sheetContainer">
@@ -817,9 +817,13 @@
 
         // ── Spreadsheet Engine ──
 
-        const app = window["spreadsheet"];
+        // `spreadsheet` is the MCP proxy injected by mcp-bridge.js (named after the photon).
+        // Alias as `app` via getter so it resolves after bridge loads.
+        Object.defineProperty(this, 'app', {
+            get() { return spreadsheet || null; }
+        });
 
-        class SpreadsheetEngine {
+        class SpreadsheetUI {
             constructor(rows = 20, cols = 10) {
                 this.data = [];
                 this.backendFormulas = {};   // { "A1": "=SUM(...)" } from backend
@@ -931,12 +935,12 @@
                 const tabBar = document.getElementById('tabBar');
                 if (!tabBar) return;
                 let html = this.openTabs.map(tab => `
-                    <div class="tab ${tab === this.currentTable ? 'active' : ''}" onclick="spreadsheet.switchSheet('${tab}')">
+                    <div class="tab ${tab === this.currentTable ? 'active' : ''}" onclick="ui.switchSheet('${tab}')">
                         <span>${tab}</span>
-                        <span class="tab-close" onclick="spreadsheet.closeTab('${tab}', event)">\u00d7</span>
+                        <span class="tab-close" onclick="ui.closeTab('${tab}', event)">\u00d7</span>
                     </div>
                 `).join('');
-                html += '<div class="btn-new-tab" onclick="spreadsheet.newSheet()" title="New Sheet">+</div>';
+                html += '<div class="btn-new-tab" onclick="ui.newSheet()" title="New Sheet">+</div>';
                 tabBar.innerHTML = html;
             }
 
@@ -945,7 +949,7 @@
                 const list = document.getElementById('sheetList');
                 if (!list) return;
                 list.innerHTML = tables.map(table => `
-                    <div class="table-item ${table.name === this.currentTable ? 'active' : ''}" onclick="spreadsheet.switchSheet('${table.name}')">
+                    <div class="table-item ${table.name === this.currentTable ? 'active' : ''}" onclick="ui.switchSheet('${table.name}')">
                         <span>\uD83D\uDCC4 ${table.name}</span>
                         <span class="table-info">${(table.size / 1024).toFixed(1)} KB</span>
                     </div>
@@ -956,12 +960,17 @@
                 const thead = document.getElementById('tableHead');
                 const tbody = document.getElementById('tableBody');
 
+                // Capture current column widths before rebuilding to prevent resize
+                const existingCols = thead.querySelectorAll('th.col-header');
+                const colWidths = Array.from(existingCols).map(th => th.offsetWidth);
+
                 // Column headers — clickable to sort
                 thead.innerHTML = '<tr><th class="corner"></th>' +
                     this.headers.map((h, c) => {
                         const sortIcon = this.sortState.column === h
                             ? (this.sortState.direction === 'asc' ? ' \u25B2' : ' \u25BC') : '';
-                        return `<th class="col-header" data-col="${c}" title="Click to sort">${h}${sortIcon}</th>`;
+                        const w = colWidths[c] ? `width:${colWidths[c]}px;` : '';
+                        return `<th class="col-header" data-col="${c}" title="Click to sort" style="${w}">${h}${sortIcon}</th>`;
                     }).join('') + '</tr>';
 
                 tbody.innerHTML = this.data.map((row, r) => `
@@ -969,7 +978,7 @@
                         <th class="row-header">${r + 1}</th>
                         ${row.map((cell, c) => {
                             const isSelected = r === this.selectedCell.row && c === this.selectedCell.col;
-                            const style = isSelected ? 'outline: 2px solid var(--selection); outline-offset: -1px; z-index: 5;' : '';
+                            const style = isSelected ? 'outline: 2px solid var(--selection); outline-offset: -1px; z-index: 5; position: relative;' : '';
                             return `<td data-row="${r}" data-col="${c}" style="${style}">
                                 <div class="cell-content">${this.escapeHtml(cell)}</div>
                             </td>`;
@@ -1108,8 +1117,37 @@
             }
 
             selectCell(row, col) {
+                // Remove previous selection highlight
+                const prev = document.querySelector('td[data-row][style*="outline"]');
+                if (prev) prev.style.cssText = '';
+                const prevColH = document.querySelector('th.col-header[style*="background"]');
+                if (prevColH) prevColH.style.cssText = '';
+                const prevRowH = document.querySelector('th.row-header[style*="background"]');
+                if (prevRowH) prevRowH.style.cssText = '';
+
                 this.selectedCell = { row, col };
-                this.render();
+
+                // Apply new selection highlight without re-rendering
+                const td = document.querySelector(`td[data-row="${row}"][data-col="${col}"]`);
+                if (td) {
+                    td.style.outline = '2px solid var(--selection)';
+                    td.style.outlineOffset = '-1px';
+                    td.style.zIndex = '5';
+                    td.style.position = 'relative';
+                }
+
+                // Highlight row/col headers
+                const colH = document.querySelector(`th.col-header[data-col="${col}"]`);
+                if (colH) {
+                    colH.style.background = 'var(--selection-bg)';
+                    colH.style.color = 'var(--selection)';
+                }
+                const rowH = document.querySelectorAll('th.row-header')[row];
+                if (rowH) {
+                    rowH.style.background = 'var(--selection-bg)';
+                    rowH.style.color = 'var(--selection)';
+                }
+
                 this.fetchCellForFormulaBar(row, col);
             }
 
@@ -1174,15 +1212,23 @@
                     input.select();
                 }
 
+                let committed = false;
                 const commit = async () => {
+                    if (committed) return; // Prevent double-commit from blur + Enter
+                    committed = true;
                     this.editing = false;
                     const newValue = input.value;
+                    // Update local data immediately so render shows the value
+                    if (this.data[row]) this.data[row][col] = newValue;
+                    // Restore cell display immediately (don't wait for backend)
+                    td.innerHTML = `<div class="cell-content">${this.escapeHtml(newValue)}</div>`;
+                    // Persist to backend asynchronously
                     await this.setCellValue(ref, newValue);
                 };
 
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') { e.preventDefault(); commit(); }
-                    else if (e.key === 'Escape') { e.preventDefault(); this.editing = false; this.render(); }
+                    else if (e.key === 'Escape') { e.preventDefault(); this.editing = false; td.innerHTML = `<div class="cell-content">${this.escapeHtml(currentValue)}</div>`; }
                     else if (e.key === 'Tab') { e.preventDefault(); commit().then(() => {
                         if (e.shiftKey) this.selectCell(row, Math.max(0, col - 1));
                         else this.selectCell(row, Math.min(this.colCount - 1, col + 1));
@@ -1194,6 +1240,7 @@
             }
 
             async setCellValue(ref, value) {
+
                 if (!app) {
                     // No backend — just set locally
                     const idx = cellRefToIndex(ref);
@@ -1430,23 +1477,24 @@
             }
         }
 
-        const spreadsheet = new SpreadsheetEngine();
+        const ui = new SpreadsheetUI();
         let allTables = [];
 
         // ── Load data from backend ──
 
         async function loadDataFromPhoton() {
+
             if (!app) return;
             try {
-                spreadsheet.updateStatus('Loading...');
+                ui.updateStatus('Loading...');
                 const result = parseMCP(await app.main());
                 if (result) {
-                    spreadsheet.loadFromSnapshot(result);
+                    ui.loadFromSnapshot(result);
                 }
                 // Also refresh table list
                 loadTableList();
             } catch (err) {
-                spreadsheet.updateStatus('Error: ' + (err.message || err));
+                ui.updateStatus('Error: ' + (err.message || err));
             }
         }
 
@@ -1479,7 +1527,7 @@
                 const sizeStr = t.size < 1024 ? t.size + ' B' :
                     t.size < 1048576 ? (t.size / 1024).toFixed(1) + ' KB' :
                     (t.size / 1048576).toFixed(1) + ' MB';
-                const active = t.name === spreadsheet.currentTable;
+                const active = t.name === ui.currentTable;
                 return `<button class="picker-item" data-name="${t.name}">
                     <div class="icon">${active ? '\uD83D\uDCDD' : '\uD83D\uDCCA'}</div>
                     <div class="info">
@@ -1491,7 +1539,7 @@
 
             list.querySelectorAll('.picker-item').forEach(el => {
                 el.addEventListener('click', () => {
-                    spreadsheet.switchSheet(el.dataset.name);
+                    ui.switchSheet(el.dataset.name);
                     hideFilePicker();
                 });
             });
@@ -1516,7 +1564,7 @@
                 if (result && result.tables) {
                     allTables = result.tables;
                     renderPickerList('');
-                    spreadsheet.renderSheetList(result.tables);
+                    ui.renderSheetList(result.tables);
                 }
             } catch (e) { /* ignore */ }
         }
@@ -1525,7 +1573,7 @@
             const input = document.getElementById('newFileName');
             const name = input.value.trim().replace(/\.csv$/i, '');
             if (!name) return;
-            spreadsheet.switchSheet(name);
+            ui.switchSheet(name);
             hideFilePicker();
             input.value = '';
         }
@@ -1551,11 +1599,13 @@
         function setupPhotonBridge() {
             if (!window.photon) { setTimeout(setupPhotonBridge, 100); return; }
 
-            // Listen for live results from any backend call (including from other clients)
+            // Listen for live results from mutation calls (not reads like get())
             window.photon.onResult?.((result) => {
                 const data = parseMCP(result);
-                if (data && (data.headers || data.data)) {
-                    spreadsheet.loadFromSnapshot(data);
+                // Only refresh on mutations that change data shape — skip get/view responses
+                // which would cause resize flicker on cell selection
+                if (data && (data.headers || data.data) && data.message) {
+                    ui.loadFromSnapshot(data);
                 }
             });
 
@@ -1563,7 +1613,7 @@
             window.photon.onEmit?.((event) => {
                 // Refresh on any data mutation event
                 if (event && event.result && (event.result.headers || event.result.data)) {
-                    spreadsheet.loadFromSnapshot(event.result);
+                    ui.loadFromSnapshot(event.result);
                 }
             });
 

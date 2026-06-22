@@ -233,6 +233,28 @@ export default class PizzaShop {
 
     const prefs = params.preferences.toLowerCase();
     let recommendations: Pizza[] = [];
+    
+    // Parse size from preference string (fallback/initial)
+    let parsedSize: 'small' | 'medium' | 'large' = 'medium';
+    if (/\bsmall\b/i.test(prefs)) {
+      parsedSize = 'small';
+    } else if (/\blarge\b/i.test(prefs)) {
+      parsedSize = 'large';
+    } else if (/\b(medium|regular)\b/i.test(prefs)) {
+      parsedSize = 'medium';
+    }
+
+    // Parse extra toppings from preference string (fallback/initial)
+    let parsedExtraToppings: string[] = [];
+    if (/\b(extra\s+)?cheese\b/i.test(prefs)) parsedExtraToppings.push('extra-cheese');
+    if (/\bpepperoni\b/i.test(prefs)) parsedExtraToppings.push('pepperoni');
+    if (/\bmushroom(s)?\b/i.test(prefs)) parsedExtraToppings.push('mushrooms');
+    if (/\bolive(s)?\b/i.test(prefs)) parsedExtraToppings.push('olives');
+    if (/\bonion(s)?\b/i.test(prefs)) parsedExtraToppings.push('onions');
+    if (/\b(bell\s+)?pepper(s)?\b/i.test(prefs) && !prefs.includes('pepperoni')) parsedExtraToppings.push('bell-peppers');
+    if (/\bjalapeno(s)?\b/i.test(prefs) || /\bjalapeño(s)?\b/i.test(prefs)) parsedExtraToppings.push('jalapenos');
+    if (/\bbacon\b/i.test(prefs)) parsedExtraToppings.push('bacon');
+    if (/\banchov(y|ies)\b/i.test(prefs)) parsedExtraToppings.push('anchovies');
 
     // Attempt AI-based semantic matching using sampling API
     try {
@@ -246,24 +268,51 @@ The customer has specified the following pizza preferences or keywords: "${param
 Here is our menu:
 ${menuDescription}
 
-Based on the customer's input, select the best matching pizzas from the menu (e.g., matching ingredients, style, spelling typos, or category).
-Return ONLY a comma-separated list of matching pizza IDs (e.g., margherita, meat-supreme).
-If no pizzas match, return "none".`;
+And here are the available extra toppings:
+${this.extraToppings.map(t => `- ID: ${t.id}, Name: ${t.name}`).join('\n')}
+
+Based on the customer's input, parse their order preferences.
+Return a JSON object with the following fields:
+1. "pizzaIds": array of matching pizza IDs from the menu (e.g., ["margherita", "pepperoni"]). If no specific pizzas are mentioned, recommend the most relevant ones.
+2. "size": the requested size of the pizza if mentioned ("small", "medium", or "large"). Default to "medium" if not specified.
+3. "extraToppings": array of topping IDs matching the extra toppings list if they want them added (e.g., ["extra-cheese", "mushrooms"]). Only include toppings they explicitly wanted to add.
+
+Format your response as a valid JSON object. Do not include markdown formatting or backticks around the JSON.`;
 
       const response = await (this as any).sample({
         prompt,
-        maxTokens: 128
+        maxTokens: 256
       });
 
-      if (response && typeof response === 'string' && response.toLowerCase().trim() !== 'none') {
-        const ids = response.split(',').map(s => s.trim().toLowerCase());
-        recommendations = this.menu.filter(p => ids.includes(p.id.toLowerCase()));
+      if (response && typeof response === 'string') {
+        // Clean markdown code blocks if any
+        let cleanResponse = response.trim();
+        if (cleanResponse.startsWith('```json')) {
+          cleanResponse = cleanResponse.substring(7);
+        } else if (cleanResponse.startsWith('```')) {
+          cleanResponse = cleanResponse.substring(3);
+        }
+        if (cleanResponse.endsWith('```')) {
+          cleanResponse = cleanResponse.substring(0, cleanResponse.length - 3);
+        }
+        cleanResponse = cleanResponse.trim();
+        
+        const parsed = JSON.parse(cleanResponse);
+        if (parsed && Array.isArray(parsed.pizzaIds) && parsed.pizzaIds.length > 0) {
+          recommendations = this.menu.filter(p => parsed.pizzaIds.includes(p.id));
+        }
+        if (parsed && ['small', 'medium', 'large'].includes(parsed.size)) {
+          parsedSize = parsed.size as 'small' | 'medium' | 'large';
+        }
+        if (parsed && Array.isArray(parsed.extraToppings)) {
+          parsedExtraToppings = parsed.extraToppings.filter(t => this.extraToppings.some(et => et.id === t));
+        }
       }
     } catch (e) {
-      // Graceful fallback to keyword matching if AI sampling is unavailable
+      // Graceful fallback to keyword matching if AI sampling is unavailable or JSON parsing fails
     }
 
-    // Keyword Fallback matching
+    // Keyword Fallback matching for pizzas if not found yet
     if (recommendations.length === 0) {
       if (prefs.includes('meat') || prefs.includes('protein') || prefs.includes('beef') || prefs.includes('bacon')) {
         recommendations = this.menu.filter(p => p.category === 'meat-lovers');
@@ -309,20 +358,46 @@ If no pizzas match, return "none".`;
       return { message: 'No pizzas selected. Try browsing the full menu!' };
     }
 
-    // Quick add with medium size (skip customization for speed)
+    // For each selected pizza, ask for customization
     for (const pizzaId of selected) {
       const pizza = this.menu.find(p => p.id === pizzaId);
-      if (pizza) {
-        this.cart.push({
-          pizza,
-          size: 'medium',
-          quantity: 1,
-          extraToppings: []
-        });
-      }
+      if (!pizza) continue;
+
+      yield io.emit.status(`Customizing ${pizza.name}...`);
+
+      // Ask for size with default parsed size pre-selected
+      const size: string = yield io.ask.select(
+        `Choose size for recommended ${pizza.name}:`,
+        [
+          { value: 'small', label: 'Small (10")', description: `$${(pizza.price * 0.8).toFixed(2)}`, selected: parsedSize === 'small' },
+          { value: 'medium', label: 'Medium (12")', description: `$${pizza.price.toFixed(2)}`, selected: parsedSize === 'medium' },
+          { value: 'large', label: 'Large (14")', description: `$${(pizza.price * 1.3).toFixed(2)}`, selected: parsedSize === 'large' }
+        ],
+        { layout: 'list' }
+      );
+
+      // Ask for extra toppings with default parsed toppings pre-selected
+      const extras: string[] = yield io.ask.select(
+        `Add extra toppings to ${pizza.name}? (+$0.75-$2.00 each)`,
+        this.extraToppings.map(t => ({
+          value: t.id,
+          label: t.name,
+          description: `+$${t.price.toFixed(2)}`,
+          selected: parsedExtraToppings.includes(t.id)
+        })),
+        { multi: true, layout: 'list' }
+      );
+
+      // Add to cart
+      this.cart.push({
+        pizza,
+        size: size as 'small' | 'medium' | 'large',
+        quantity: 1,
+        extraToppings: extras || []
+      });
     }
 
-    yield io.emit.toast(`Added ${selected.length} recommended pizza(s)!`, 'success');
+    yield io.emit.toast(`Added ${selected.length} recommended pizza(s) with toppings!`, 'success');
 
     return this.formatCartAsBill('Pizzas Added!');
   }
@@ -524,15 +599,26 @@ If no pizzas match, return "none".`;
   /**
    * Get cart status
    * @autorun
+   * @format kv
    */
   async cartStatus() {
     const itemCount = this.cart.reduce((sum, i) => sum + i.quantity, 0);
     const total = this.calculateTotal();
 
+    if (itemCount === 0) {
+      return {
+        '🛒 Status': 'Empty',
+        '💰 Total': '$0.00'
+      };
+    }
+
     return {
-      items: itemCount,
-      total: `$${total.toFixed(2)}`,
-      pizzas: this.cart.map(i => `${i.pizza.name} ×${i.quantity}`)
+      '🛒 Total Items': itemCount,
+      '💰 Subtotal': `$${total.toFixed(2)}`,
+      '🍕 In Cart': this.cart.map(i => {
+        const toppingsStr = i.extraToppings.length > 0 ? ` (+${i.extraToppings.join(', ')})` : '';
+        return `${i.quantity}x ${i.pizza.name} (${i.size.charAt(0).toUpperCase() + i.size.slice(1)})${toppingsStr}`;
+      }).join(', ')
     };
   }
 
