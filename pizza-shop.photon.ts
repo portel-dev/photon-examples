@@ -599,7 +599,7 @@ Format your response as a valid JSON object. Do not include markdown formatting 
   /**
    * Get cart status
    * @autorun
-   * @format article
+   * @format article {@columns 1}
    */
   async cartStatus() {
     const itemCount = this.cart.reduce((sum, i) => sum + i.quantity, 0);
