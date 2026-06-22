@@ -661,11 +661,38 @@ Format your response as a valid JSON object. Do not include markdown formatting 
     if (title) {
       bill += `### 🍕 ${title}\n\n`;
     }
-    bill += `\`\`\`text\n`;
-    bill += `========================================\n`;
-    bill += `              PIZZA SHOP                \n`;
-    bill += `        - Freshly Baked For You -       \n`;
-    bill += `========================================\n`;
+    bill += `<style>
+  .pizza-receipt-paper {
+    background: #fdfcf7 !important;
+    color: #1a202c !important;
+    padding: 24px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid #e2e8f0 !important;
+    border-top: 6px solid #ff9f43 !important;
+    border-bottom: 6px double #cbd5e0 !important;
+    max-width: 400px !important;
+    margin: 16px auto !important;
+  }
+  .pizza-receipt-paper pre {
+    background: transparent !important;
+    color: #1a202c !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-family: monospace !important;
+    box-shadow: none !important;
+  }
+</style>
+<div class="pizza-receipt-paper">
+
+\`\`\`text
+========================================
+              PIZZA SHOP                
+        - Freshly Baked For You -       
+========================================
+`;
+
     if (extraFields?.orderNumber) {
       bill += `Order ID:  ${extraFields.orderNumber}\n`;
     }
@@ -742,7 +769,8 @@ Format your response as a valid JSON object. Do not include markdown formatting 
     
     bill += `     Thank you for your order!          \n`;
     bill += `========================================\n`;
-    bill += `\`\`\`\n`;
+    bill += `\`\`\`
+</div>`;
 
     return bill;
   }
