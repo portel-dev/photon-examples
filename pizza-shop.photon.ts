@@ -545,6 +545,16 @@ Format your response as a valid JSON object. Do not include markdown formatting 
   async *checkout() {
     if (this.cart.length === 0) {
       yield io.emit.toast('Your cart is empty!', 'warning');
+      try {
+        const viewMenu: boolean = yield io.ask.confirm(
+          '🛒 Your cart is empty! Would you like to view the pizza menu?'
+        );
+        if (viewMenu) {
+          return yield* this.menu();
+        }
+      } catch (e) {
+        // Fallback for non-elicitation environments
+      }
       return '### ⚠️ Cart is Empty!\n\nPlease add some pizzas to your cart before checking out.';
     }
 
@@ -567,10 +577,25 @@ Format your response as a valid JSON object. Do not include markdown formatting 
         cardInfo = yield io.ask.form('💳 Card Details', {
           type: 'object',
           properties: {
-            cardholder: { type: 'string', title: 'Cardholder Name' },
-            cardNumber: { type: 'string', title: 'Card Number (16 digits)' },
-            expiry: { type: 'string', title: 'Expiry Date (MM/YY)' },
-            cvv: { type: 'string', title: 'CVV' }
+            cardholder: { type: 'string', title: 'Cardholder Name', description: 'Name as printed on card' },
+            cardNumber: {
+              type: 'string',
+              title: 'Card Number',
+              description: '16 digits without spaces',
+              pattern: '^\\d{16}$'
+            },
+            expiry: {
+              type: 'string',
+              title: 'Expiry Date',
+              description: 'MM/YY format',
+              pattern: '^(0[1-9]|1[0-2])\\/?([0-9]{2})$'
+            },
+            cvv: {
+              type: 'string',
+              title: 'CVV',
+              description: '3 or 4 digits security code',
+              pattern: '^\\d{3,4}$'
+            }
           },
           required: ['cardholder', 'cardNumber', 'expiry', 'cvv']
         });
@@ -587,11 +612,20 @@ Format your response as a valid JSON object. Do not include markdown formatting 
           type: 'object',
           properties: {
             name: { type: 'string', title: 'Your Name' },
-            phone: { type: 'string', title: 'Phone Number' },
+            phone: {
+              type: 'string',
+              title: 'Phone Number',
+              description: '10 to 15 digits',
+              pattern: '^\\+?\\d{10,15}$'
+            },
             address: { type: 'string', title: 'Street Address' },
             apt: { type: 'string', title: 'Apt/Suite (optional)' },
             city: { type: 'string', title: 'City' },
-            zip: { type: 'string', title: 'ZIP Code' },
+            zip: {
+              type: 'string',
+              title: 'ZIP Code',
+              pattern: '^\\d{5}$'
+            },
             instructions: { type: 'string', title: 'Delivery Instructions (optional)' }
           },
           required: ['name', 'phone', 'address', 'city', 'zip']
@@ -605,7 +639,12 @@ Format your response as a valid JSON object. Do not include markdown formatting 
           type: 'object',
           properties: {
             name: { type: 'string', title: 'Your Name' },
-            phone: { type: 'string', title: 'Phone Number' },
+            phone: {
+              type: 'string',
+              title: 'Phone Number',
+              description: '10 to 15 digits',
+              pattern: '^\\+?\\d{10,15}$'
+            },
             pickupTime: { type: 'string', title: 'Pickup Time (ASAP / Specific time)' }
           },
           required: ['name', 'phone']
@@ -734,7 +773,8 @@ Format your response as a valid JSON object. Do not include markdown formatting 
     }
   ): string {
     const subtotal = this.calculateTotal();
-    const isDelivery = extraFields?.orderType !== 'Pickup';
+    const isDelivery = extraFields?.orderType === 'Delivery';
+    const hasOrderType = extraFields?.orderType !== undefined;
     const deliveryFee = this.cart.length > 0 && isDelivery ? 3.99 : 0;
     const tax = subtotal * 0.08;
     const total = subtotal > 0 ? subtotal + deliveryFee + tax : 0;
@@ -944,7 +984,13 @@ ${itemsHtml}
 <span>SUBTOTAL:</span>
 <span>$${subtotal.toFixed(2)}</span>
 </div>
-${total > 0 && isDelivery ? `
+${total > 0 && !hasOrderType ? `
+<div class="receipt-row" style="font-size: 11px; opacity: 0.8; font-style: italic;">
+<span>EST. DELIVERY:</span>
+<span>$3.99</span>
+</div>
+` : ''}
+${total > 0 && hasOrderType && isDelivery ? `
 <div class="receipt-row">
 <span>DELIVERY FEE:</span>
 <span>$${deliveryFee.toFixed(2)}</span>
